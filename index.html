@@ -205,25 +205,37 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
   <div class="modal">
     <div class="modal-handle"></div>
     <h3 id="manualTitle">MANUAL ENTRY</h3>
-    <div class="modal-sub">Enter handicap index, course handicap, and net score for each hole.</div>
+    <div class="modal-sub">Enter handicap index and gross score per hole. Net scores are calculated automatically using White Tees SI.</div>
     <div class="modal-row">
       <span class="modal-name">HCP Index</span>
-      <input class="modal-inp" type="number" step="0.1" id="m_hcpIndex" placeholder="e.g. 14.2"/>
-    </div>
-    <div class="modal-row">
-      <span class="modal-name">Course HCP</span>
-      <input class="modal-inp" type="number" id="m_courseHcp" placeholder="e.g. 16"/>
+      <input class="modal-inp" type="number" step="0.1" inputmode="decimal" id="m_hcpIndex" placeholder="e.g. 14.2"/>
     </div>
     <div class="hole-group">
-      <div class="hole-group-title">Front 9 — Net Scores</div>
-      <div class="manual-grid" id="front9">
-        ${Array.from({length:9},(_,i)=>`<div><label>H${i+1}</label><input type="number" id="mh${i+1}" min="1" max="15"/></div>`).join('')}
+      <div class="hole-group-title">Front 9 — Gross Scores</div>
+      <div class="manual-grid">
+        <div><label>H1</label><input type="number" inputmode="numeric" id="mg1"/></div>
+        <div><label>H2</label><input type="number" inputmode="numeric" id="mg2"/></div>
+        <div><label>H3</label><input type="number" inputmode="numeric" id="mg3"/></div>
+        <div><label>H4</label><input type="number" inputmode="numeric" id="mg4"/></div>
+        <div><label>H5</label><input type="number" inputmode="numeric" id="mg5"/></div>
+        <div><label>H6</label><input type="number" inputmode="numeric" id="mg6"/></div>
+        <div><label>H7</label><input type="number" inputmode="numeric" id="mg7"/></div>
+        <div><label>H8</label><input type="number" inputmode="numeric" id="mg8"/></div>
+        <div><label>H9</label><input type="number" inputmode="numeric" id="mg9"/></div>
       </div>
     </div>
     <div class="hole-group">
-      <div class="hole-group-title">Back 9 — Net Scores</div>
-      <div class="manual-grid" id="back9">
-        ${Array.from({length:9},(_,i)=>`<div><label>H${i+10}</label><input type="number" id="mh${i+10}" min="1" max="15"/></div>`).join('')}
+      <div class="hole-group-title">Back 9 — Gross Scores</div>
+      <div class="manual-grid">
+        <div><label>H10</label><input type="number" inputmode="numeric" id="mg10"/></div>
+        <div><label>H11</label><input type="number" inputmode="numeric" id="mg11"/></div>
+        <div><label>H12</label><input type="number" inputmode="numeric" id="mg12"/></div>
+        <div><label>H13</label><input type="number" inputmode="numeric" id="mg13"/></div>
+        <div><label>H14</label><input type="number" inputmode="numeric" id="mg14"/></div>
+        <div><label>H15</label><input type="number" inputmode="numeric" id="mg15"/></div>
+        <div><label>H16</label><input type="number" inputmode="numeric" id="mg16"/></div>
+        <div><label>H17</label><input type="number" inputmode="numeric" id="mg17"/></div>
+        <div><label>H18</label><input type="number" inputmode="numeric" id="mg18"/></div>
       </div>
     </div>
     <div class="modal-acts">
@@ -713,41 +725,60 @@ window.closeModalIfBg=function(e){if(e.target===$('modal'))$('modal').style.disp
 function openManual(name){
   manualTarget=name;
   $('manualTitle').textContent=`MANUAL ENTRY — ${name}`;
-  // Pre-populate if existing data
   const pd=playerData[name];
-  $('m_hcpIndex').value=pd?.hcpIndex!=null?pd.hcpIndex:'';
-  $('m_courseHcp').value=pd?.courseHcp!=null?pd.courseHcp:'';
-  Array.from({length:18},(_,i)=>i+1).forEach(h=>{
-    const inp=$(`mh${h}`);
-    if(inp) inp.value=pd?.netScores?.[h]||'';
-  });
+  $('m_hcpIndex').value = pd?.hcpIndex!=null ? pd.hcpIndex : '';
+  // Pre-populate gross scores if already saved
+  for(let h=1;h<=18;h++){
+    const inp=$(`mg${h}`);
+    if(inp) inp.value = pd?.grossScores?.[h] || '';
+  }
   $('manualModal').style.display='flex';
 }
+
 window.saveManual=function(){
   if(!manualTarget) return;
-  const hcpIndex =parseFloat($('m_hcpIndex').value)||null;
-  const courseHcp=parseInt($('m_courseHcp').value)||null;
-  const netScores={};
-  Array.from({length:18},(_,i)=>i+1).forEach(h=>{
-    const v=parseInt($(`mh${h}`)?.value);
-    if(!isNaN(v)&&v>0) netScores[h]=v;
+  const hcpIndex = parseFloat($('m_hcpIndex').value);
+  if(isNaN(hcpIndex)){
+    alert('Please enter a valid Handicap Index');
+    return;
+  }
+
+  // Collect gross scores
+  const grossScores={};
+  for(let h=1;h<=18;h++){
+    const v=parseInt($(`mg${h}`)?.value);
+    if(!isNaN(v)&&v>0) grossScores[h]=v;
+  }
+  if(Object.keys(grossScores).length < 9){
+    alert('Please enter gross scores for at least 9 holes');
+    return;
+  }
+
+  // Calculate course handicap and net scores using White Tees
+  const courseHcp = calcCourseHcp(hcpIndex, WHITE_TEES.rating, WHITE_TEES.slope, WHITE_TEES.par);
+  const netScores = {};
+  WHITE_TEES.holes.forEach(({hole, si})=>{
+    if(grossScores[hole]!=null){
+      netScores[hole] = grossScores[hole] - strokesOnHole(courseHcp, si);
+    }
   });
+
   playerData[manualTarget]={
-    netScores, grossScores:{}, teeHdr:'White Tees (manual)',
+    netScores, grossScores,
+    teeHdr:'White Tees (manual)',
     detectedTee:TEES.white, wrongTees:false,
-    hcpIndex, courseHcp, correctedNet:false, correctedCH:null,
-    holesFound:Object.keys(netScores).length, manual:true,
+    hcpIndex, courseHcp,
+    correctedNet:false, correctedCH:null,
+    holesFound:Object.keys(netScores).length,
+    manual:true,
   };
-  // Ensure player is active
+
   if(!active.includes(manualTarget)) active.push(manualTarget);
   $('manualModal').style.display='none';
   renderChips(); renderAll();
 };
 window.closeManual=function(){$('manualModal').style.display='none';};
 window.closeManualIfBg=function(e){if(e.target===$('manualModal'))$('manualModal').style.display='none';};
-
-// ── Open manual entry for a player (from chip long-press or after save) ───────
-// Expose so we can trigger from roster chip context too
 window.openManualForPlayer=function(name){openManual(name);};
 
 // ── Init ──────────────────────────────────────────────────────────────────────
