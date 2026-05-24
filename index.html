@@ -16,52 +16,41 @@
   --gold:#c9a84c;--gold-lit:#e8c46a;--gold-bg:#251f05;--gold-bdr:#7a6420;
   --text:#cce3ce;--muted:#4d6e51;
   --red:#c0392b;--red-bg:#2a0d0d;--red-lit:#e08080;
-  --blue:#1565c0;--blue-bg:#0d1e3a;--blue-lit:#64b5f6;
   --white:#edf7ee;--radius:8px;
   --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--display:'Bebas Neue',sans-serif;
-  /* Scorecard cell colours */
-  --win-bg:#2a3a00;--win-text:#b8e04a;--win-border:#5a8a00;   /* outright skin winner — lime green */
-  --tie-bg:#0d1e3a;--tie-text:#64b5f6;--tie-border:#1565c0;   /* tied for low — blue */
-  --loss-bg:#1a1a1a;--loss-text:#4a5a4c;--loss-border:#222;   /* not in contention — dark grey */
+  --win-bg:#2a3a00;--win-text:#b8e04a;--win-border:#5a8a00;
+  --tie-bg:#0d1e3a;--tie-text:#64b5f6;--tie-border:#1565c0;
+  --loss-bg:#1a1a1a;--loss-text:#4a5a4c;--loss-border:#222;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
 body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
-
-/* ── Header ── */
 .hdr{background:linear-gradient(160deg,#091508 0%,#142018 100%);border-bottom:1px solid var(--border);padding:16px 18px 14px;position:relative;overflow:hidden}
 .hdr::after{content:'⛳';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:60px;opacity:.07;pointer-events:none}
 .hdr-sub{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:2px}
 .hdr-title{font-family:var(--display);font-size:32px;color:var(--gold);letter-spacing:2px;line-height:1}
-
-/* ── Tab bar ── */
 .tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border)}
-.tab{flex:1;padding:11px 8px;text-align:center;font-family:var(--display);font-size:16px;letter-spacing:1px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .18s;-webkit-tap-highlight-color:transparent}
-.tab:active{background:var(--card)}
+.tab{flex:1;padding:11px 4px;text-align:center;font-family:var(--display);font-size:14px;letter-spacing:1px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .18s;-webkit-tap-highlight-color:transparent}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
-
-/* ── Controls ── */
 .wager-row{display:flex;gap:10px;align-items:center;padding:10px 18px;background:var(--surface);border-bottom:1px solid var(--border)}
 .week-input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--sans);font-size:13px;padding:8px 10px;border-radius:var(--radius);outline:none;-webkit-appearance:none}
 .week-input:focus{border-color:var(--green-lit)}
 .wager-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 .wager-input{width:72px;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:var(--radius);outline:none;-webkit-appearance:none;text-align:center}
-
-/* ── Roster ── */
 .roster{padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--border)}
 .roster-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:20px;font-size:12px;font-family:var(--mono);border:1px solid;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .15s}
 .chip-on{background:#182e1a;border-color:var(--green-lit);color:var(--text)}
 .chip-off{background:var(--card);border-color:var(--border);color:var(--muted)}
+.chip-manual{border-style:dashed;border-color:#5a6e5a}
 .chip-noid{border-style:dashed}
 .chip:active{filter:brightness(1.2)}
 .chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .dot-on{background:var(--green-lit);box-shadow:0 0 5px var(--green-lit)}
+.dot-manual{background:#8aaa8a;box-shadow:0 0 4px #8aaa8a}
 .dot-off{background:var(--muted)}
 .chip-sub{font-size:10px;color:var(--muted)}
 .chip-sub-err{font-size:10px;color:var(--red)}
-
-/* ── Fetch button ── */
 .fetch-row{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface)}
 .btn{font-family:var(--display);letter-spacing:1px;border:none;cursor:pointer;border-radius:var(--radius);transition:all .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .btn-fetch{padding:10px 22px;font-size:18px;background:linear-gradient(135deg,#235e2a 0%,var(--green-lit) 100%);color:#fff;box-shadow:0 2px 10px #2d6a3540;width:100%}
@@ -69,8 +58,6 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .btn-fetch:disabled{opacity:.35;cursor:not-allowed;transform:none;filter:none}
 .btn-sm{padding:7px 14px;font-size:13px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--sans)}
 .btn-sm:active{background:var(--card)}
-
-/* ── Status ── */
 .status-area{padding:0 18px}
 .status{margin:10px 0;padding:10px 14px;border-radius:var(--radius);font-family:var(--mono);font-size:11px;display:flex;align-items:flex-start;gap:8px;line-height:1.6}
 .s-load{background:#0d2a10;border:1px solid var(--green);color:var(--green-lit)}
@@ -79,65 +66,47 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .s-ok{background:#0d2a10;border:1px solid var(--green);color:var(--green-lit)}
 .spinner{width:13px;height:13px;border:2px solid var(--green-lit);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;margin-top:1px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── Summary cards ── */
 .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 18px 0}
 .s-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
 .s-card-wide{grid-column:1/-1}
 .s-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 .s-val{font-family:var(--display);font-size:28px;color:var(--gold);line-height:1}
 .s-unit{font-size:10px;color:var(--muted);margin-top:2px}
-
-/* ── Section heading ── */
 .section{padding:16px 18px 0}
 .section-title{font-family:var(--display);font-size:18px;color:var(--gold);letter-spacing:1px;margin-bottom:12px}
 .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius)}
-
-/* ── Shared table base ── */
 .tbl{border-collapse:collapse;font-family:var(--mono);width:100%}
 .tbl th{background:var(--surface);color:var(--muted);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:7px 6px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
-.tbl th.sticky-col{text-align:left;padding-left:10px;position:sticky;left:0;z-index:2;background:var(--surface)}
+.tbl th.sticky-col{text-align:left;padding-left:10px;position:sticky;left:0;z-index:2;background:var(--surface);min-width:130px}
 .tbl td{padding:8px 6px;text-align:center;border-bottom:1px solid #131e14;font-size:11px}
-.tbl td.sticky-col{text-align:left;padding-left:10px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--white);position:sticky;left:0;z-index:1;background:var(--card);white-space:nowrap}
+.tbl td.sticky-col{text-align:left;padding-left:10px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--white);position:sticky;left:0;z-index:1;background:var(--card);white-space:nowrap;min-width:130px}
 .tbl tbody tr:nth-child(even) td.sticky-col{background:#111e13}
 .tbl tbody tr:active td{background:#182e1a}
-
-/* ── Scorecard cells (standard view) ── */
 .c-win{background:var(--gold-bg)!important;color:var(--gold-lit)!important;font-weight:500}
 .c-win::after{content:' ★';font-size:9px}
-.c-tie{color:#2d4a30}
+.c-tie{color:#3d6e42}
 .c-norm{color:var(--text)}
 .c-none{color:#1a2e1c}
 .winner-row td{background:var(--surface)!important;font-size:9px;color:var(--muted);border-top:1px solid var(--border);padding:5px 6px}
 .winner-row td.sticky-col{background:var(--surface)!important}
 .wr-win{color:var(--gold-lit);font-weight:500}
 .wr-tie{color:var(--red-lit)}
-
-/* ── Heat map cells (grid view) ── */
 .h-win{background:var(--win-bg);color:var(--win-text);border:1px solid var(--win-border);font-weight:600}
 .h-tie{background:var(--tie-bg);color:var(--tie-text);border:1px solid var(--tie-border);font-weight:500}
 .h-loss{background:var(--loss-bg);color:var(--loss-text);border:1px solid var(--loss-border)}
 .h-none{color:#1a2e1c;border:1px solid transparent}
-
-/* ── Legend ── */
 .legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 18px 12px;align-items:center}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);color:var(--muted)}
 .legend-dot{width:12px;height:12px;border-radius:3px;border:1px solid}
 .ld-win{background:var(--win-bg);border-color:var(--win-border)}
 .ld-tie{background:var(--tie-bg);border-color:var(--tie-border)}
 .ld-loss{background:var(--loss-bg);border-color:var(--loss-border)}
-
-/* ── Badge ── */
 .badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:10px}
 .badge-gold{background:var(--gold-bg);color:var(--gold-lit);border:1px solid var(--gold-bdr)}
 .badge-zero{background:transparent;color:var(--muted);border:1px solid var(--border)}
-
-/* ── Tee correction badges ── */
 .tee-badge{display:inline-block;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:3px;margin-top:3px}
 .tee-ok{background:#1a2a05;border:1px solid #5a8a20;color:#a8d060}
 .tee-err{background:var(--red-bg);border:1px solid var(--red);color:var(--red-lit)}
-
-/* ── Payout table ── */
 .pay-table{border-collapse:collapse;font-family:var(--mono);font-size:12px;width:100%}
 .pay-table th{background:var(--surface);color:var(--muted);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;text-align:left;border-bottom:1px solid var(--border)}
 .pay-table td{padding:11px 14px;border-bottom:1px solid #131e14}
@@ -146,28 +115,32 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .pay-win{color:var(--gold-lit);font-weight:600;font-size:16px}
 .pay-zero{color:var(--muted)}
 .pay-total td{border-top:1px solid var(--border)}
-
-/* ── Empty state ── */
 .empty{padding:60px 18px;text-align:center;color:var(--muted)}
 .empty-icon{font-size:52px;opacity:.3;margin-bottom:14px}
 .empty-title{font-family:var(--display);font-size:28px;letter-spacing:1px}
 .empty-sub{font-size:12px;margin-top:8px;line-height:1.6}
-
-/* ── Modal (bottom sheet) ── */
+/* Modal */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:flex-end;justify-content:center;z-index:200}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:24px 20px 36px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:24px 20px 36px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
 .modal h3{font-family:var(--display);font-size:24px;color:var(--gold);margin-bottom:5px}
 .modal-sub{font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.modal-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px}
 .modal-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.modal-name{width:150px;font-size:12px;color:var(--text);font-family:var(--mono)}
+.modal-name{width:145px;font-size:12px;color:var(--text);font-family:var(--mono);flex-shrink:0}
 .modal-inp{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:var(--radius);outline:none;-webkit-appearance:none}
 .modal-inp:focus{border-color:var(--green-lit)}
+.modal-inp.manual-hint{border-color:#5a6e5a;font-style:italic;color:var(--muted)}
 .modal-acts{display:flex;gap:10px;margin-top:18px}
 .modal-acts .btn-fetch{flex:1;font-size:16px;padding:12px}
 .modal-acts .btn-sm{padding:12px 16px}
-
-/* ── Floating edit button ── */
+/* Manual entry grid */
+.manual-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0}
+.manual-grid label{font-size:9px;color:var(--muted);text-align:center;font-family:var(--mono)}
+.manual-grid input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 4px;border-radius:4px;outline:none;text-align:center;-webkit-appearance:none}
+.manual-grid input:focus{border-color:var(--green-lit)}
+.hole-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:8px}
+.hole-group-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));right:18px;z-index:100}
 .fab button{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:10px 16px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.5);color:var(--text);font-family:var(--sans);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .fab button:active{background:var(--surface)}
@@ -180,48 +153,45 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
   <div class="hdr-title">PULPIT CLUB SKINS</div>
 </div>
 
-<!-- Tab bar -->
 <div class="tabs">
   <div class="tab active" id="tab-results" onclick="switchTab('results')">RESULTS</div>
-  <div class="tab" id="tab-grid"    onclick="switchTab('grid')">HOLE GRID</div>
+  <div class="tab" id="tab-grid"    onclick="switchTab('grid')">GRID</div>
   <div class="tab" id="tab-payout"  onclick="switchTab('payout')">PAYOUTS</div>
 </div>
 
-<!-- Week / wager -->
 <div class="wager-row">
   <input class="week-input" id="weekLabel" value="Week 1 – May 20, 2026" placeholder="Week label"/>
   <span class="wager-label">$</span>
   <input class="wager-input" id="wager" type="number" value="20" min="1"/>
 </div>
 
-<!-- Roster chips -->
 <div class="roster">
-  <div class="roster-lbl">Tap players to include / exclude · ✏ to update IDs</div>
+  <div class="roster-lbl">Tap to include/exclude · ✏ Edit IDs & manual entries</div>
   <div class="chips" id="chips"></div>
 </div>
 
-<!-- Fetch -->
 <div class="fetch-row">
   <button class="btn btn-fetch" id="btnFetch">FETCH SCORES</button>
 </div>
 
-<!-- Status -->
 <div class="status-area" id="statusArea"></div>
 
-<!-- Tab content panels -->
 <div id="panel-results"></div>
 <div id="panel-grid"   style="display:none"></div>
 <div id="panel-payout" style="display:none"></div>
 
-<!-- Floating edit IDs button -->
 <div class="fab"><button id="btnEditIds">✏ Edit IDs</button></div>
 
-<!-- Modal -->
+<!-- Edit IDs / Manual Entry Modal -->
 <div class="overlay" id="modal" style="display:none" onclick="closeModalIfBg(event)">
   <div class="modal">
     <div class="modal-handle"></div>
-    <h3>PLAYER IDs</h3>
-    <div class="modal-sub">Enter each player's SmartGolf <strong>game_week_user</strong> ID.<br/>IDs may change each week — update before fetching.</div>
+    <h3>PLAYERS & IDs</h3>
+    <div class="modal-sub">
+      Enter SmartGolf ID, or type <strong>manual</strong> to enter scores by hand.
+      IDs may change each week.
+    </div>
+    <div class="modal-section">SmartGolf IDs</div>
     <div id="modalRows"></div>
     <div class="modal-acts">
       <button class="btn btn-fetch" id="btnSaveIds">Save</button>
@@ -230,8 +200,41 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
   </div>
 </div>
 
+<!-- Manual Score Entry Modal -->
+<div class="overlay" id="manualModal" style="display:none" onclick="closeManualIfBg(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 id="manualTitle">MANUAL ENTRY</h3>
+    <div class="modal-sub">Enter handicap index, course handicap, and net score for each hole.</div>
+    <div class="modal-row">
+      <span class="modal-name">HCP Index</span>
+      <input class="modal-inp" type="number" step="0.1" id="m_hcpIndex" placeholder="e.g. 14.2"/>
+    </div>
+    <div class="modal-row">
+      <span class="modal-name">Course HCP</span>
+      <input class="modal-inp" type="number" id="m_courseHcp" placeholder="e.g. 16"/>
+    </div>
+    <div class="hole-group">
+      <div class="hole-group-title">Front 9 — Net Scores</div>
+      <div class="manual-grid" id="front9">
+        ${Array.from({length:9},(_,i)=>`<div><label>H${i+1}</label><input type="number" id="mh${i+1}" min="1" max="15"/></div>`).join('')}
+      </div>
+    </div>
+    <div class="hole-group">
+      <div class="hole-group-title">Back 9 — Net Scores</div>
+      <div class="manual-grid" id="back9">
+        ${Array.from({length:9},(_,i)=>`<div><label>H${i+10}</label><input type="number" id="mh${i+10}" min="1" max="15"/></div>`).join('')}
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-fetch" onclick="saveManual()">Save Scores</button>
+      <button class="btn btn-sm"    onclick="closeManual()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── Course data ──────────────────────────────────────────────────────────────
+// ── Course data ───────────────────────────────────────────────────────────────
 const WHITE_TEES={rating:68.6,slope:131,par:72,holes:[
   {hole:1, par:4,si:4 },{hole:2, par:5,si:10},{hole:3, par:4,si:18},
   {hole:4, par:3,si:16},{hole:5, par:4,si:8 },{hole:6, par:4,si:2 },
@@ -241,109 +244,167 @@ const WHITE_TEES={rating:68.6,slope:131,par:72,holes:[
   {hole:16,par:3,si:17},{hole:17,par:4,si:9 },{hole:18,par:4,si:5 },
 ]};
 
+const TEES={
+  white:     {label:'White',     rating:68.6,slope:131,par:72,isTarget:true },
+  black:     {label:'Black',     rating:72.3,slope:148,par:72,isTarget:false},
+  bluewhite: {label:'Blue/White',rating:69.4,slope:137,par:72,isTarget:false},
+  blue:      {label:'Blue',      rating:70.7,slope:113,par:72,isTarget:false},
+  yellow:    {label:'Yellow',    rating:67.1,slope:127,par:72,isTarget:false},
+  red:       {label:'Red',       rating:64.8,slope:116,par:72,isTarget:false},
+  green:     {label:'Green',     rating:60.8,slope:109,par:72,isTarget:false},
+};
+
+function detectTee(hdr){
+  const h=hdr.toLowerCase();
+  if(h.includes('black'))                              return TEES.black;
+  if(h.includes('blue/white')||h.includes('69.4'))    return TEES.bluewhite;
+  if(h.includes('blue')      ||h.includes('70.7'))    return TEES.blue;
+  if(h.includes('yellow')    ||h.includes('67.1'))    return TEES.yellow;
+  if(h.includes('red')       ||h.includes('64.8'))    return TEES.red;
+  if(h.includes('green')     ||h.includes('60.8'))    return TEES.green;
+  if(h.includes('white')     ||h.includes('68.6'))    return TEES.white;
+  return null;
+}
+
+// ── Default roster ────────────────────────────────────────────────────────────
 const DEFAULT_ROSTER=[
-  {name:"Greg Pendlebury",id:553245},{name:"Paul Hill",id:553309},
-  {name:"Bruce Young",id:553333},{name:"Mohamed Hussain",id:553340},
-  {name:"Brett Bandula",id:553229},{name:"Lee Chung",id:null},
-  {name:"Murray McDonald",id:null},{name:"Mark Deltin",id:null},
+  {name:"Greg Pendlebury", id:553245},
+  {name:"Paul Hill",       id:553309},
+  {name:"Bruce Young",     id:553333},
+  {name:"Mohamed Hussain", id:553340},
+  {name:"Brett Bandula",   id:553229},
+  {name:"Lee Chung",       id:null  },
+  {name:"Murray McDonald", id:null  },
+  {name:"Mark Deltin",     id:null  },
 ];
 
-// ── State ────────────────────────────────────────────────────────────────────
-let roster=JSON.parse(JSON.stringify(DEFAULT_ROSTER));
-let active=roster.filter(p=>p.id).map(p=>p.name);
-let playerData={};
-let currentTab='results';
+// ── State ─────────────────────────────────────────────────────────────────────
+let roster    = JSON.parse(JSON.stringify(DEFAULT_ROSTER));
+let active    = roster.filter(p=>p.id).map(p=>p.name);
+let playerData= {};
+let currentTab= 'results';
+let manualTarget = null; // name of player being manually entered
 
 function saveRoster(){try{localStorage.setItem('skins_roster',JSON.stringify(roster))}catch(e){}}
 function loadRoster(){try{const s=localStorage.getItem('skins_roster');if(s){const r=JSON.parse(s);if(Array.isArray(r))roster=r;}}catch(e){}}
 
-// ── Handicap helpers ─────────────────────────────────────────────────────────
+// ── Handicap helpers ──────────────────────────────────────────────────────────
 function calcCourseHcp(idx,rating,slope,par){return Math.round(idx*(slope/113)+(rating-par));}
 function strokesOnHole(ch,si){return Math.floor(ch/18)+(si<=(ch%18)?1:0);}
-// ── All tees at Pulpit Club ───────────────────────────────────────────────────
-const TEES = {
-  white:      { label:'White',      rating:68.6, slope:131, par:72, isTarget:true  },
-  black:      { label:'Black',      rating:72.3, slope:148, par:72, isTarget:false },
-  bluewhite:  { label:'Blue/White', rating:69.4, slope:137, par:72, isTarget:false },
-  blue:       { label:'Blue',       rating:70.7, slope:113, par:72, isTarget:false },
-  yellow:     { label:'Yellow',     rating:67.1, slope:127, par:72, isTarget:false },
-  red:        { label:'Red',        rating:64.8, slope:116, par:72, isTarget:false },
-  green:      { label:'Green',      rating:60.8, slope:109, par:72, isTarget:false },
-};
-
-// Detect which tee a SmartGolf header string refers to
-function detectTee(hdr) {
-  const h = hdr.toLowerCase();
-  if (h.includes('black')                          ) return TEES.black;
-  if (h.includes('blue/white') || h.includes('69.4')) return TEES.bluewhite;
-  if (h.includes('blue')       || h.includes('70.7')) return TEES.blue;
-  if (h.includes('yellow')     || h.includes('67.1')) return TEES.yellow;
-  if (h.includes('red')        || h.includes('64.8')) return TEES.red;
-  if (h.includes('green')      || h.includes('60.8')) return TEES.green;
-  if (h.includes('white')      || h.includes('68.6')) return TEES.white;
-  return null; // unknown
-}
-
-function recalcToWhite(gross, hcpIndex) {
-  const ch  = calcCourseHcp(hcpIndex, WHITE_TEES.rating, WHITE_TEES.slope, WHITE_TEES.par);
-  const net = {};
-  WHITE_TEES.holes.forEach(({hole,si}) => {
-    if (gross[hole] != null) net[hole] = gross[hole] - strokesOnHole(ch, si);
+function recalcToWhite(gross,hcpIndex){
+  const ch=calcCourseHcp(hcpIndex,WHITE_TEES.rating,WHITE_TEES.slope,WHITE_TEES.par);
+  const net={};
+  WHITE_TEES.holes.forEach(({hole,si})=>{
+    if(gross[hole]!=null) net[hole]=gross[hole]-strokesOnHole(ch,si);
   });
-  return { netScores:net, courseHcp:ch };
+  return{netScores:net,courseHcp:ch};
 }
 
-// ── HTML parser ──────────────────────────────────────────────────────────────
+// ── HTML parser ───────────────────────────────────────────────────────────────
 function parseSmartGolfHTML(html){
   const doc=new DOMParser().parseFromString(html,'text/html');
+
+  // Find all score tables — there are TWO per player (front 9 + back 9)
+  // They sit inside a turbo-frame and use class "user-scores-table"
   const tables=[...doc.querySelectorAll('table.user-scores-table')];
-  const net={},gross={};
+  const net={}, gross={};
   let offset=0;
-  tables.forEach(table=>{
+
+  tables.forEach((table,ti)=>{
     const rows=[...table.querySelectorAll('tbody tr')];
-    let netRow=null,grossRow=null;
+    let netRow=null, grossRow=null;
     rows.forEach(r=>{
-      const lbl=r.querySelector('td div.cell')?.textContent?.trim();
+      // Label cell is the FIRST td (no delta attr), contains a div.cell with text
+      const cells=[...r.querySelectorAll('td')];
+      if(!cells.length) return;
+      // First cell is the row label (no delta attribute)
+      const firstCell=cells[0];
+      const hasDelta=firstCell.hasAttribute('delta');
+      if(hasDelta) return; // skip if first cell is a score cell
+      const lbl=firstCell.textContent.trim();
       if(lbl==='Net Score')   netRow=r;
       if(lbl==='Gross Score') grossRow=r;
     });
-    // Extract scores from each row type into respective maps
-    [[netRow,net],[grossRow,gross]].forEach(([row,map])=>{
-      if(!row) return;
-      [...row.querySelectorAll('td[delta]')].forEach((cell,i)=>{
-        const h=offset+i+1,v=parseInt(cell.querySelector('div')?.textContent?.trim());
-        if(!isNaN(v)&&h<=18) map[h]=v;
+
+    // Extract score cells (those with delta attribute) from each row
+    const extractScores=(row,map)=>{
+      if(!row) return 0;
+      const scoreCells=[...row.querySelectorAll('td[delta]')];
+      scoreCells.forEach((cell,i)=>{
+        const h=offset+i+1;
+        const v=parseInt(cell.textContent.trim());
+        if(!isNaN(v)&&h>=1&&h<=18) map[h]=v;
       });
-    });
-    // Advance offset by number of score cells — use whichever row exists, count once
-    const ref=netRow||grossRow;
-    const cellCount=ref?[...ref.querySelectorAll('td[delta]')].length:9;
-    offset+=cellCount;
+      return scoreCells.length;
+    };
+
+    const netCount  = extractScores(netRow,   net);
+    const grossCount= extractScores(grossRow,  gross);
+    // Advance offset by number of holes in this table (9 for front, 9 for back)
+    // Use whichever row had more cells, fallback to 9
+    offset += Math.max(netCount, grossCount, 0) || 9;
   });
 
-  const teeHdr  = doc.querySelector('table.user-scores-table thead th div.cell')?.textContent?.trim() || '';
+  // ── Tee detection ─────────────────────────────────────────────────────────
+  // The tee info is in the FIRST th of the FIRST table header
+  const firstTh = doc.querySelector('table.user-scores-table thead tr th:first-child');
+  const teeHdr  = firstTh ? firstTh.textContent.trim() : '';
   const detectedTee = detectTee(teeHdr);
   const wrongTees   = detectedTee !== null && !detectedTee.isTarget;
-  const txt=doc.body?.textContent||'';
-  let hcpIndex=null,courseHcp=null;
-  const im=txt.match(/[Hh]andicap\s+[Ii]ndex[:\s]+([0-9]+\.?[0-9]*)/);
-  const cm=txt.match(/[Cc]ourse\s+[Hh]andicap[:\s]+([0-9]+)/);
-  const hm=txt.match(/\bHCP[:\s]+([0-9]+\.?[0-9]*)/);
-  const pm=txt.match(/[Pp]laying\s+[Hh]andicap[:\s]+([0-9]+)/);
-  if(im) hcpIndex=parseFloat(im[1]);
-  if(!hcpIndex&&hm) hcpIndex=parseFloat(hm[1]);
-  if(cm) courseHcp=parseInt(cm[1]);
-  else if(pm) courseHcp=parseInt(pm[1]);
 
-  let correctedNet=false,correctedCH=null,finalNet={...net};
-  if(wrongTees&&hcpIndex!=null&&Object.keys(gross).length>0){
+  // ── HCP extraction ────────────────────────────────────────────────────────
+  // SmartGolf shows HCP info in various elements — scan all text nodes
+  let hcpIndex=null, courseHcp=null;
+  const allText = doc.body ? doc.body.innerText || doc.body.textContent : '';
+
+  // Try common patterns
+  const patterns=[
+    [/handicap\s+index[:\s]*([0-9]+\.?[0-9]*)/i,   'idx'],
+    [/hcp\s+index[:\s]*([0-9]+\.?[0-9]*)/i,         'idx'],
+    [/index[:\s]*([0-9]+\.?[0-9]*)/i,               'idx'],
+    [/course\s+handicap[:\s]*([0-9]+)/i,             'ch' ],
+    [/playing\s+handicap[:\s]*([0-9]+)/i,            'ch' ],
+    [/course\s+hcp[:\s]*([0-9]+)/i,                  'ch' ],
+  ];
+  patterns.forEach(([re,type])=>{
+    const m=allText.match(re);
+    if(m){
+      if(type==='idx'&&hcpIndex==null)  hcpIndex=parseFloat(m[1]);
+      if(type==='ch' &&courseHcp==null) courseHcp=parseInt(m[1]);
+    }
+  });
+
+  // Also try scanning individual table cells for numeric HCP values
+  // SmartGolf often puts HCP index in a caption or separate cell
+  if(hcpIndex==null){
+    doc.querySelectorAll('td,th,caption,span,div').forEach(el=>{
+      const txt=el.textContent.trim();
+      // Look for patterns like "12.4" that could be an index (between 0 and 54)
+      if(/^[0-9]+\.[0-9]$/.test(txt)){
+        const v=parseFloat(txt);
+        if(v>=0&&v<=54&&hcpIndex==null) hcpIndex=v;
+      }
+    });
+  }
+
+  // ── Tee correction ────────────────────────────────────────────────────────
+  let correctedNet=false, correctedCH=null, finalNet={...net};
+  const hasGross = Object.keys(gross).length>=9;
+
+  if(wrongTees && hcpIndex!=null && hasGross){
     const{netScores:wn,courseHcp:wch}=recalcToWhite(gross,hcpIndex);
     finalNet=wn; correctedNet=true; correctedCH=wch; courseHcp=wch;
   }
-  return{netScores:finalNet,grossScores:gross,teeHdr,detectedTee,wrongTees,hcpIndex,courseHcp,correctedNet,correctedCH,holesFound:Object.keys(finalNet).length};
+
+  return{
+    netScores:finalNet, grossScores:gross, teeHdr, detectedTee,
+    wrongTees, hcpIndex, courseHcp, correctedNet, correctedCH,
+    holesFound:Object.keys(finalNet).length,
+    debugInfo:{tableCount:tables.length, netKeys:Object.keys(net), grossKeys:Object.keys(gross), teeHdr, allTextSnippet:allText.slice(0,500)}
+  };
 }
 
-// ── Fetch via proxy ──────────────────────────────────────────────────────────
+// ── Fetch via proxy ───────────────────────────────────────────────────────────
 async function fetchPlayer(player){
   const res=await fetch(`/api/scores?id=${player.id}`);
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -359,10 +420,12 @@ async function fetchPlayer(player){
   return parseSmartGolfHTML(await res.text());
 }
 
-// ── Skins calculation ────────────────────────────────────────────────────────
+// ── Skins calc ────────────────────────────────────────────────────────────────
 function calcSkins(fetched){
   const holes=Array.from({length:18},(_,i)=>i+1).map(h=>{
-    const scores=fetched.map(p=>({name:p.name,score:playerData[p.name]?.netScores?.[h]??null})).filter(x=>x.score!=null);
+    const scores=fetched
+      .map(p=>({name:p.name,score:playerData[p.name]?.netScores?.[h]??null}))
+      .filter(x=>x.score!=null);
     if(!scores.length) return{hole:h,winner:null,tied:false,min:null,scores};
     const min=Math.min(...scores.map(s=>s.score));
     const winners=scores.filter(s=>s.score===min);
@@ -370,16 +433,17 @@ function calcSkins(fetched){
   });
   const skinCount={};
   fetched.forEach(p=>{skinCount[p.name]=0;});
-  holes.forEach(h=>{if(h.winner) skinCount[h.winner]=(skinCount[h.winner]||0)+1;});
+  holes.forEach(h=>{if(h.winner)skinCount[h.winner]=(skinCount[h.winner]||0)+1;});
   return{holes,skinCount};
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function $(id){return document.getElementById(id);}
 function fmt(n){return n%1===0?`$${n}`:`$${n.toFixed(2)}`;}
 function badge(n){return n>0?`<span class="badge badge-gold">${n}</span>`:`<span class="badge badge-zero">0</span>`;}
+function isManual(p){return p.id==='manual'||p.id===-1;}
 
-// ── Tab switching ────────────────────────────────────────────────────────────
+// ── Tab switching ─────────────────────────────────────────────────────────────
 window.switchTab=function(tab){
   currentTab=tab;
   ['results','grid','payout'].forEach(t=>{
@@ -388,70 +452,81 @@ window.switchTab=function(tab){
   });
 };
 
-// ── Render chips ─────────────────────────────────────────────────────────────
+// ── Render chips ──────────────────────────────────────────────────────────────
 function renderChips(){
   $('chips').innerHTML=roster.map(p=>{
     const on=active.includes(p.name);
     const pd=playerData[p.name];
-    const corrected=pd?.correctedNet, wrongBad=pd?.wrongTees&&!pd?.correctedNet;
+    const manual=isManual(p);
+    const hasScore=pd?.holesFound>0;
+    const corrected=pd?.correctedNet;
     const teeLbl=pd?.detectedTee?.label||'';
-    const sub=p.id?`#${p.id}${pd?.holesFound>0?' ✓':''}${corrected?` ${teeLbl}→W`:wrongBad?` ⚠${teeLbl}`:''}`:'no ID';
-    return `<div class="chip ${on?'chip-on':'chip-off'}${!p.id?' chip-noid':''}" onclick="togglePlayer('${p.name.replace(/'/g,"\\'")}')" >
-      <div class="chip-dot ${on?'dot-on':'dot-off'}"></div>
+    let sub='';
+    if(manual)        sub='manual'+(hasScore?' ✓':'');
+    else if(p.id)     sub=`#${p.id}${hasScore?' ✓':''}${corrected?` ${teeLbl}→W`:''}`;
+    else              sub='no ID';
+    return `<div class="chip ${on?'chip-on':'chip-off'}${manual?' chip-manual':!p.id?' chip-noid':''}"
+      onclick="togglePlayer('${p.name.replace(/'/g,"\\'")}')">
+      <div class="chip-dot ${on?manual?'dot-manual':'dot-on':'dot-off'}"></div>
       ${p.name}<span class="${p.id?'chip-sub':'chip-sub-err'}">${sub}</span>
     </div>`;
   }).join('');
 }
 
-// ── Render status ────────────────────────────────────────────────────────────
+// ── Status ────────────────────────────────────────────────────────────────────
 function renderStatus(fetched){
-  const corrected=fetched.filter(p=>playerData[p.name]?.correctedNet);
-  const bad=fetched.filter(p=>playerData[p.name]?.wrongTees&&!playerData[p.name]?.correctedNet);
-  let h=`<div class="status s-ok">✓ ${fetched.map(p=>`${p.name.split(' ')[0]} (${playerData[p.name].holesFound}h)`).join(' · ')}</div>`;
-  if(corrected.length) h+=`<div class="status s-warn">⚠ Tee corrected → White Tees: ${corrected.map(p=>`<strong>${p.name}</strong> (${playerData[p.name].detectedTee?.label||'unknown'} → White)`).join(', ')}</div>`;
-  if(bad.length) h+=`<div class="status s-err">⛔ Wrong tees, could not auto-correct (missing gross scores or HCP): <strong>${bad.map(p=>p.name).join(', ')}</strong></div>`;
+  const corrected  = fetched.filter(p=>playerData[p.name]?.correctedNet);
+  const uncorr     = fetched.filter(p=>playerData[p.name]?.wrongTees&&!playerData[p.name]?.correctedNet);
+  const manualPlayers = fetched.filter(p=>isManual(p));
+  let h=`<div class="status s-ok">✓ ${fetched.map(p=>{
+    const pd=playerData[p.name];
+    return `${p.name.split(' ')[0]} (${pd.holesFound}h${pd.hcpIndex!=null?', HCP '+pd.hcpIndex.toFixed(1):''}${pd.courseHcp!=null?', CH '+pd.courseHcp:''})`;
+  }).join(' · ')}</div>`;
+  if(corrected.length) h+=`<div class="status s-warn">⚠ Tee corrected → White: ${corrected.map(p=>`<strong>${p.name}</strong> (${playerData[p.name].detectedTee?.label}→White, CH ${playerData[p.name].correctedCH})`).join(', ')}</div>`;
+  if(uncorr.length)    h+=`<div class="status s-err">⛔ Non-white tees detected but could not auto-correct (need gross scores & HCP index): <strong>${uncorr.map(p=>p.name).join(', ')}</strong></div>`;
+  if(manualPlayers.length) h+=`<div class="status s-ok" style="border-color:#5a6e5a;background:#0d1a0d">✎ Manual entries: ${manualPlayers.map(p=>p.name).join(', ')}</div>`;
   $('statusArea').innerHTML=h;
 }
 
-// ── Render RESULTS tab ───────────────────────────────────────────────────────
+// ── Results tab ───────────────────────────────────────────────────────────────
 function renderResults(fetched,holes,skinCount,totalSkins,totalPot,perSkin,wager,weekLbl){
   const hh=Array.from({length:18},(_,i)=>`<th>H${i+1}</th>`).join('');
   const rows=fetched.map(p=>{
     const pd=playerData[p.name],skins=skinCount[p.name]||0;
     const tot=Array.from({length:18},(_,i)=>i+1).reduce((s,h)=>s+(pd.netScores[h]??0),0);
+    const hcpStr=pd.hcpIndex!=null?pd.hcpIndex.toFixed(1):'–';
+    const chStr =pd.courseHcp!=null?String(pd.courseHcp):'–';
     let nameSfx='';
-    if(pd.correctedNet) nameSfx=`<br/><span class="tee-badge tee-ok">✓ ${pd.detectedTee?.label||'Wrong'}→White (CH ${pd.correctedCH})</span>`;
-    else if(pd.wrongTees) nameSfx=`<br/><span class="tee-badge tee-err">⚠ ${pd.detectedTee?.label||'Wrong'} Tees — not corrected</span>`;
+    if(pd.correctedNet)       nameSfx=`<br/><span class="tee-badge tee-ok">✓ ${pd.detectedTee?.label}→White (CH ${pd.correctedCH})</span>`;
+    else if(pd.wrongTees&&!pd.correctedNet) nameSfx=`<br/><span class="tee-badge tee-err">⚠ ${pd.detectedTee?.label} tees — could not correct</span>`;
+    else if(isManual(p))      nameSfx=`<br/><span class="tee-badge" style="background:#0d1a10;border:1px solid #3a5a3a;color:#8aaa8a">✎ manual entry</span>`;
     const cells=Array.from({length:18},(_,i)=>i+1).map(h=>{
       const score=pd.netScores[h],hd=holes[h-1];
       const win=hd.winner===p.name;
       const tie=hd.tied&&hd.scores.some(s=>s.name===p.name&&s.score===hd.min);
       return score==null?`<td class="c-none">–</td>`:`<td class="${win?'c-win':tie?'c-tie':'c-norm'}">${score}</td>`;
     }).join('');
-    const hcpStr   = pd.hcpIndex  != null ? pd.hcpIndex.toFixed(1) : '–';
-    const chStr    = pd.courseHcp != null ? pd.courseHcp           : '–';
-    return `<tr><td class="sticky-col">${p.name}${nameSfx}</td>
-      <td style="font-weight:500;color:var(--text)">${hcpStr}</td>
-      <td style="font-weight:500;color:var(--gold-lit)">${chStr}</td>
-      <td style="font-weight:500">${tot||'–'}</td><td>${badge(skins)}</td>${cells}</tr>`;
+    return `<tr>
+      <td class="sticky-col">${p.name}${nameSfx}</td>
+      <td style="color:var(--text);font-weight:500">${hcpStr}</td>
+      <td style="color:var(--gold-lit);font-weight:500">${chStr}</td>
+      <td style="font-weight:500;color:var(--text)">${tot||'–'}</td>
+      <td>${badge(skins)}</td>${cells}</tr>`;
   }).join('');
   const winRow=holes.map(h=>
     h.winner?`<td><span class="wr-win">${h.winner.split(' ')[1]||h.winner}</span></td>`
     :h.tied?`<td><span class="wr-tie">TIE</span></td>`:`<td>–</td>`
   ).join('');
-
   $('panel-results').innerHTML=`
     <div class="summary">
       <div class="s-card s-card-wide"><div class="s-lbl">Week</div><div style="font-size:14px;color:var(--text);padding-top:4px">${weekLbl}</div></div>
       <div class="s-card"><div class="s-lbl">Total Pot</div><div class="s-val">${fmt(totalPot)}</div><div class="s-unit">${fmt(wager)} × ${fetched.length} players</div></div>
-      <div class="s-card"><div class="s-lbl">Skins Won</div><div class="s-val">${totalSkins}</div><div class="s-unit">of 18 · ${fmt(perSkin)}/skin</div></div>
+      <div class="s-card"><div class="s-lbl">Skins Won</div><div class="s-val">${totalSkins}</div><div class="s-unit">of 18 holes · ${fmt(perSkin)}/skin</div></div>
     </div>
     <div class="section" style="padding-bottom:100px">
       <div class="section-title">NET SCORECARD</div>
       <div class="scroll-x"><table class="tbl">
-        <thead><tr>
-          <th class="sticky-col">Player</th><th>HCP</th><th>CH</th><th>Tot</th><th>★</th>${hh}
-        </tr></thead>
+        <thead><tr><th class="sticky-col">Player</th><th>HCP Idx</th><th>Crs HCP</th><th>Net</th><th>★</th>${hh}</tr></thead>
         <tbody>${rows}
           <tr class="winner-row">
             <td class="sticky-col" style="font-size:8px;letter-spacing:1px">SKIN WINNER</td>
@@ -462,18 +537,14 @@ function renderResults(fetched,holes,skinCount,totalSkins,totalPot,perSkin,wager
     </div>`;
 }
 
-// ── Render HOLE GRID tab ─────────────────────────────────────────────────────
+// ── Grid tab ──────────────────────────────────────────────────────────────────
 function renderGrid(fetched,holes,skinCount){
-  // Columns = holes 1-18, rows = players
-  // Cell colour: win=lime, tie=blue, loss=dark grey, absent=empty
-  const hh=Array.from({length:18},(_,i)=>{
-    const h=holes[i];
-    const cls=h.winner?'wr-win':h.tied?'wr-tie':'';
-    return `<th style="${h.winner?'color:var(--win-text)':h.tied?'color:var(--tie-text)':''}">H${i+1}</th>`;
-  }).join('');
-
+  const hh=Array.from({length:18},(_,i)=>`<th style="${holes[i].winner?'color:var(--win-text)':holes[i].tied?'color:var(--tie-text)':''}">H${i+1}</th>`).join('');
   const rows=fetched.map(p=>{
     const pd=playerData[p.name],skins=skinCount[p.name]||0;
+    const hcpStr=pd.hcpIndex!=null?`HCP ${pd.hcpIndex.toFixed(1)}`:'';
+    const chStr =pd.courseHcp!=null?`CH ${pd.courseHcp}`:'';
+    const sub=[hcpStr,chStr].filter(Boolean).join(' · ');
     const cells=Array.from({length:18},(_,i)=>i+1).map(h=>{
       const score=pd.netScores[h],hd=holes[h-1];
       if(score==null) return `<td class="h-none">–</td>`;
@@ -481,22 +552,14 @@ function renderGrid(fetched,holes,skinCount){
       const tie=hd.tied&&hd.scores.some(s=>s.name===p.name&&s.score===hd.min);
       return `<td class="${win?'h-win':tie?'h-tie':'h-loss'}">${score}</td>`;
     }).join('');
-    const hcpStr = pd.hcpIndex  != null ? `HCP ${pd.hcpIndex.toFixed(1)}` : '';
-    const chStr  = pd.courseHcp != null ? `CH ${pd.courseHcp}` : '';
-    return `<tr><td class="sticky-col">${p.name}<br/><span style="font-size:9px;color:var(--muted);font-family:var(--mono)">${hcpStr}${hcpStr&&chStr?' · ':''}${chStr} ${badge(skins)} ${skins}sk</span></td>${cells}</tr>`;
+    return `<tr><td class="sticky-col">${p.name}<br/><span style="font-size:9px;color:var(--muted);font-family:var(--mono)">${sub} ${badge(skins)} ${skins}sk</span></td>${cells}</tr>`;
   }).join('');
-
-  // Hole summary row — min score per hole
-  const minRow=holes.map(h=>{
-    if(!h.min) return `<td class="h-none">–</td>`;
-    const cls=h.winner?'h-win':h.tied?'h-tie':'h-loss';
-    return `<td class="${cls}" style="font-size:9px">${h.winner?h.winner.split(' ')[1]||h.winner:h.tied?'TIE':'–'}</td>`;
-  }).join('');
-
+  const winRow=holes.map(h=>
+    h.winner?`<td><span class="wr-win">${h.winner.split(' ')[1]||h.winner}</span></td>`
+    :h.tied?`<td><span class="wr-tie">TIE</span></td>`:`<td>–</td>`
+  ).join('');
   $('panel-grid').innerHTML=`
-    <div class="section" style="padding-top:14px">
-      <div class="section-title">HOLE-BY-HOLE GRID</div>
-    </div>
+    <div class="section" style="padding-top:14px"><div class="section-title">HOLE-BY-HOLE GRID</div></div>
     <div class="legend" style="padding-top:0">
       <div class="legend-item"><div class="legend-dot ld-win"></div>Skin winner</div>
       <div class="legend-item"><div class="legend-dot ld-tie"></div>Tied for low</div>
@@ -507,22 +570,23 @@ function renderGrid(fetched,holes,skinCount){
         <thead><tr><th class="sticky-col">Player</th>${hh}</tr></thead>
         <tbody>${rows}
           <tr class="winner-row">
-            <td class="sticky-col" style="font-size:8px;letter-spacing:1px">WINNER</td>
-            ${minRow}
+            <td class="sticky-col" style="font-size:8px;letter-spacing:1px">WINNER</td>${winRow}
           </tr>
         </tbody>
       </table></div>
     </div>`;
 }
 
-// ── Render PAYOUTS tab ───────────────────────────────────────────────────────
+// ── Payout tab ────────────────────────────────────────────────────────────────
 function renderPayout(fetched,skinCount,totalSkins,totalPot,perSkin){
   const rows=[...fetched].sort((a,b)=>(skinCount[b.name]||0)-(skinCount[a.name]||0)).map(p=>{
     const skins=skinCount[p.name]||0,pd=playerData[p.name];
+    const hcpStr=pd.hcpIndex!=null?pd.hcpIndex.toFixed(1):'–';
+    const chStr =pd.courseHcp!=null?String(pd.courseHcp):'–';
     return `<tr>
-      <td class="pay-name">${p.name}</td>
-      <td style="color:var(--text);font-family:var(--mono);font-size:11px">${pd.hcpIndex!=null?pd.hcpIndex.toFixed(1):'–'}</td>
-      <td style="color:var(--gold-lit);font-family:var(--mono);font-size:11px;font-weight:500">${pd.courseHcp??'–'}</td>
+      <td class="pay-name">${p.name}${isManual(p)?'<br/><span style="font-size:9px;color:#5a7a5e">✎ manual</span>':''}</td>
+      <td style="color:var(--text);font-family:var(--mono);font-size:11px">${hcpStr}</td>
+      <td style="color:var(--gold-lit);font-family:var(--mono);font-size:11px;font-weight:500">${chStr}</td>
       <td>${badge(skins)}</td>
       <td class="${skins>0?'pay-win':'pay-zero'}">${skins>0?fmt(skins*perSkin):'–'}</td>
     </tr>`;
@@ -543,100 +607,141 @@ function renderPayout(fetched,skinCount,totalSkins,totalPot,perSkin){
     </div>`;
 }
 
-// ── Render all tabs ──────────────────────────────────────────────────────────
+// ── Render all ────────────────────────────────────────────────────────────────
 function renderAll(){
-  const wager=parseFloat($('wager').value)||20;
+  const wager  =parseFloat($('wager').value)||20;
   const weekLbl=$('weekLabel').value;
   const fetched=roster.filter(p=>active.includes(p.name)&&playerData[p.name]?.holesFound>0);
-
   if(!fetched.length){
     const empty=`<div class="empty"><div class="empty-icon">⛳</div>
       <div class="empty-title">NO SCORES YET</div>
-      <div class="empty-sub">Select players above and<br/>tap Fetch Scores</div></div>`;
-    $('panel-results').innerHTML=empty;
-    $('panel-grid').innerHTML=empty;
-    $('panel-payout').innerHTML=empty;
+      <div class="empty-sub">Select players and tap Fetch Scores.<br/>Manual players: tap ✏ Edit IDs then enter scores.</div></div>`;
+    ['results','grid','payout'].forEach(t=>$(`panel-${t}`).innerHTML=empty);
     return;
   }
-
   const{holes,skinCount}=calcSkins(fetched);
   const totalSkins=holes.filter(h=>h.winner).length;
-  const potPlayers=active.filter(n=>roster.find(p=>p.name===n&&p.id)).length;
-  const totalPot=potPlayers*wager;
-  const perSkin=totalSkins>0?totalPot/totalSkins:0;
-
+  const potPlayers=active.filter(n=>roster.find(p=>p.name===n&&(p.id||isManual(p)))).length;
+  const totalPot  =potPlayers*wager;
+  const perSkin   =totalSkins>0?totalPot/totalSkins:0;
   renderStatus(fetched);
   renderResults(fetched,holes,skinCount,totalSkins,totalPot,perSkin,wager,weekLbl);
   renderGrid(fetched,holes,skinCount);
   renderPayout(fetched,skinCount,totalSkins,totalPot,perSkin);
 }
 
-// ── Actions ──────────────────────────────────────────────────────────────────
+// ── Toggle active ─────────────────────────────────────────────────────────────
 window.togglePlayer=function(name){
   const i=active.indexOf(name);
   if(i>=0) active.splice(i,1); else active.push(name);
   renderChips(); renderAll();
 };
 
+// ── Fetch all ─────────────────────────────────────────────────────────────────
 async function fetchAll(){
-  const targets=roster.filter(p=>active.includes(p.name)&&p.id);
-  if(!targets.length){$('statusArea').innerHTML=`<div class="status s-warn">No active players have IDs set.</div>`;return;}
-  playerData={}; renderChips();
-  $('statusArea').innerHTML=`<div class="status s-load"><div class="spinner"></div>Fetching scores for ${targets.length} players…</div>`;
-  ['results','grid','payout'].forEach(t=>{$(`panel-${t}`).innerHTML='';});
+  // Fetch players with SmartGolf IDs (not manual)
+  const targets=roster.filter(p=>active.includes(p.name)&&p.id&&!isManual(p));
+  if(!targets.length){
+    $('statusArea').innerHTML=`<div class="status s-warn">No active players with SmartGolf IDs. Add IDs via ✏ Edit IDs, or add manual scores there too.</div>`;
+    renderAll();
+    return;
+  }
+  // Clear only fetched players, keep manual entries
+  targets.forEach(p=>{delete playerData[p.name];});
+  renderChips();
+  $('statusArea').innerHTML=`<div class="status s-load"><div class="spinner"></div>Fetching ${targets.length} players from SmartGolf…</div>`;
 
   const errors=[];
   await Promise.all(targets.map(async p=>{
     try{playerData[p.name]=await fetchPlayer(p);}
     catch(e){
       errors.push({name:p.name,msg:e.message});
-      playerData[p.name]={netScores:{},grossScores:{},holesFound:0,error:e.message};
+      playerData[p.name]={netScores:{},grossScores:{},holesFound:0,error:e.message,hcpIndex:null,courseHcp:null};
     }
   }));
 
   renderChips();
   if(errors.length){
-    // Check if it's a session cookie issue
-    if(errors.some(e=>e.msg==='NO_SESSION')){
-      $('statusArea').innerHTML=`
-        <div class="status s-err">
-          ⛔ <div><strong>Session cookie not configured.</strong><br/><br/>
-          The SmartGolf session cookie needs to be added to Vercel once.<br/><br/>
-          <strong>Steps:</strong><br/>
-          1. Go to your project at <strong>vercel.com</strong><br/>
-          2. Settings → Environment Variables<br/>
-          3. Add variable: <strong>SMARTGOLF_SESSION</strong><br/>
-          4. Value: paste the cookie value from the setup instructions<br/>
-          5. Click Save → Redeploy<br/><br/>
-          Your current cookie value (paste this as the variable value):<br/>
-          <span style="word-break:break-all;color:var(--gold-lit);font-size:10px">kWs%2F6LVkThVR8ZveKvWkbia...</span>
-          </div>
-        </div>`;
-    } else {
-      $('statusArea').innerHTML=`<div class="status s-err">⚠ Fetch errors:<br/>${errors.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
-    }
+    $('statusArea').innerHTML=`<div class="status s-err">⚠ ${errors.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
   }
   renderAll();
 }
 
+// ── Edit IDs modal ────────────────────────────────────────────────────────────
 function openModal(){
   $('modalRows').innerHTML=roster.map(p=>`
     <div class="modal-row">
       <span class="modal-name">${p.name}</span>
-      <input class="modal-inp" type="number" inputmode="numeric" placeholder="SmartGolf ID"
-        id="mid_${p.name.replace(/\s/g,'_')}" value="${p.id||''}"/>
+      <input class="modal-inp ${isManual(p)?'manual-hint':''}" type="text"
+        inputmode="numeric" placeholder="SmartGolf ID or 'manual'"
+        id="mid_${p.name.replace(/\s/g,'_')}"
+        value="${isManual(p)?'manual':p.id||''}"/>
     </div>`).join('');
   $('modal').style.display='flex';
 }
+
 function saveIds(){
-  roster.forEach(p=>{const i=$(`mid_${p.name.replace(/\s/g,'_')}`);if(i)p.id=i.value?parseInt(i.value):null;});
-  saveRoster(); $('modal').style.display='none'; renderChips();
+  roster.forEach(p=>{
+    const inp=$(`mid_${p.name.replace(/\s/g,'_')}`);
+    if(!inp) return;
+    const val=inp.value.trim().toLowerCase();
+    if(val==='manual') p.id='manual';
+    else if(val==='') p.id=null;
+    else p.id=parseInt(val)||null;
+  });
+  saveRoster();
+  $('modal').style.display='none';
+  renderChips();
+  // Open manual entry for any player marked manual without data
+  const needsEntry=roster.find(p=>isManual(p)&&active.includes(p.name)&&!playerData[p.name]?.holesFound);
+  if(needsEntry) openManual(needsEntry.name);
 }
 window.closeModalIfBg=function(e){if(e.target===$('modal'))$('modal').style.display='none';};
 
-// ── Init ─────────────────────────────────────────────────────────────────────
+// ── Manual entry modal ────────────────────────────────────────────────────────
+function openManual(name){
+  manualTarget=name;
+  $('manualTitle').textContent=`MANUAL ENTRY — ${name}`;
+  // Pre-populate if existing data
+  const pd=playerData[name];
+  $('m_hcpIndex').value=pd?.hcpIndex!=null?pd.hcpIndex:'';
+  $('m_courseHcp').value=pd?.courseHcp!=null?pd.courseHcp:'';
+  Array.from({length:18},(_,i)=>i+1).forEach(h=>{
+    const inp=$(`mh${h}`);
+    if(inp) inp.value=pd?.netScores?.[h]||'';
+  });
+  $('manualModal').style.display='flex';
+}
+window.saveManual=function(){
+  if(!manualTarget) return;
+  const hcpIndex =parseFloat($('m_hcpIndex').value)||null;
+  const courseHcp=parseInt($('m_courseHcp').value)||null;
+  const netScores={};
+  Array.from({length:18},(_,i)=>i+1).forEach(h=>{
+    const v=parseInt($(`mh${h}`)?.value);
+    if(!isNaN(v)&&v>0) netScores[h]=v;
+  });
+  playerData[manualTarget]={
+    netScores, grossScores:{}, teeHdr:'White Tees (manual)',
+    detectedTee:TEES.white, wrongTees:false,
+    hcpIndex, courseHcp, correctedNet:false, correctedCH:null,
+    holesFound:Object.keys(netScores).length, manual:true,
+  };
+  // Ensure player is active
+  if(!active.includes(manualTarget)) active.push(manualTarget);
+  $('manualModal').style.display='none';
+  renderChips(); renderAll();
+};
+window.closeManual=function(){$('manualModal').style.display='none';};
+window.closeManualIfBg=function(e){if(e.target===$('manualModal'))$('manualModal').style.display='none';};
+
+// ── Open manual entry for a player (from chip long-press or after save) ───────
+// Expose so we can trigger from roster chip context too
+window.openManualForPlayer=function(name){openManual(name);};
+
+// ── Init ──────────────────────────────────────────────────────────────────────
 loadRoster();
-active=roster.filter(p=>p.id).map(p=>p.name);
+active=roster.filter(p=>p.id||isManual(p)).map(p=>p.name);
 renderChips();
 renderAll();
 $('btnFetch').addEventListener('click',fetchAll);
