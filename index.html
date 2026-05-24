@@ -233,12 +233,12 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 <script>
 // ── Course data ──────────────────────────────────────────────────────────────
 const WHITE_TEES={rating:68.6,slope:131,par:72,holes:[
-  {hole:1,par:4,si:9},{hole:2,par:5,si:5},{hole:3,par:4,si:13},
-  {hole:4,par:3,si:15},{hole:5,par:4,si:7},{hole:6,par:4,si:1},
-  {hole:7,par:3,si:17},{hole:8,par:5,si:3},{hole:9,par:4,si:11},
-  {hole:10,par:4,si:10},{hole:11,par:5,si:2},{hole:12,par:4,si:4},
-  {hole:13,par:3,si:12},{hole:14,par:5,si:6},{hole:15,par:4,si:14},
-  {hole:16,par:3,si:18},{hole:17,par:4,si:16},{hole:18,par:4,si:8},
+  {hole:1, par:4,si:4 },{hole:2, par:5,si:10},{hole:3, par:4,si:18},
+  {hole:4, par:3,si:16},{hole:5, par:4,si:8 },{hole:6, par:4,si:2 },
+  {hole:7, par:3,si:14},{hole:8, par:5,si:6 },{hole:9, par:4,si:12},
+  {hole:10,par:4,si:11},{hole:11,par:5,si:13},{hole:12,par:4,si:3 },
+  {hole:13,par:3,si:1 },{hole:14,par:5,si:15},{hole:15,par:4,si:7 },
+  {hole:16,par:3,si:17},{hole:17,par:4,si:9 },{hole:18,par:4,si:5 },
 ]};
 
 const DEFAULT_ROSTER=[
@@ -260,11 +260,37 @@ function loadRoster(){try{const s=localStorage.getItem('skins_roster');if(s){con
 // ── Handicap helpers ─────────────────────────────────────────────────────────
 function calcCourseHcp(idx,rating,slope,par){return Math.round(idx*(slope/113)+(rating-par));}
 function strokesOnHole(ch,si){return Math.floor(ch/18)+(si<=(ch%18)?1:0);}
-function recalcWhiteNet(gross,hcpIndex){
-  const ch=calcCourseHcp(hcpIndex,WHITE_TEES.rating,WHITE_TEES.slope,WHITE_TEES.par);
-  const net={};
-  WHITE_TEES.holes.forEach(({hole,si})=>{if(gross[hole]!=null)net[hole]=gross[hole]-strokesOnHole(ch,si);});
-  return{netScores:net,courseHcp:ch};
+// ── All tees at Pulpit Club ───────────────────────────────────────────────────
+const TEES = {
+  white:      { label:'White',      rating:68.6, slope:131, par:72, isTarget:true  },
+  black:      { label:'Black',      rating:72.3, slope:148, par:72, isTarget:false },
+  bluewhite:  { label:'Blue/White', rating:69.4, slope:137, par:72, isTarget:false },
+  blue:       { label:'Blue',       rating:70.7, slope:113, par:72, isTarget:false },
+  yellow:     { label:'Yellow',     rating:67.1, slope:127, par:72, isTarget:false },
+  red:        { label:'Red',        rating:64.8, slope:116, par:72, isTarget:false },
+  green:      { label:'Green',      rating:60.8, slope:109, par:72, isTarget:false },
+};
+
+// Detect which tee a SmartGolf header string refers to
+function detectTee(hdr) {
+  const h = hdr.toLowerCase();
+  if (h.includes('black')                          ) return TEES.black;
+  if (h.includes('blue/white') || h.includes('69.4')) return TEES.bluewhite;
+  if (h.includes('blue')       || h.includes('70.7')) return TEES.blue;
+  if (h.includes('yellow')     || h.includes('67.1')) return TEES.yellow;
+  if (h.includes('red')        || h.includes('64.8')) return TEES.red;
+  if (h.includes('green')      || h.includes('60.8')) return TEES.green;
+  if (h.includes('white')      || h.includes('68.6')) return TEES.white;
+  return null; // unknown
+}
+
+function recalcToWhite(gross, hcpIndex) {
+  const ch  = calcCourseHcp(hcpIndex, WHITE_TEES.rating, WHITE_TEES.slope, WHITE_TEES.par);
+  const net = {};
+  WHITE_TEES.holes.forEach(({hole,si}) => {
+    if (gross[hole] != null) net[hole] = gross[hole] - strokesOnHole(ch, si);
+  });
+  return { netScores:net, courseHcp:ch };
 }
 
 // ── HTML parser ──────────────────────────────────────────────────────────────
@@ -281,6 +307,7 @@ function parseSmartGolfHTML(html){
       if(lbl==='Net Score')   netRow=r;
       if(lbl==='Gross Score') grossRow=r;
     });
+    // Extract scores from each row type into respective maps
     [[netRow,net],[grossRow,gross]].forEach(([row,map])=>{
       if(!row) return;
       [...row.querySelectorAll('td[delta]')].forEach((cell,i)=>{
@@ -288,12 +315,15 @@ function parseSmartGolfHTML(html){
         if(!isNaN(v)&&h<=18) map[h]=v;
       });
     });
+    // Advance offset by number of score cells — use whichever row exists, count once
     const ref=netRow||grossRow;
-    offset+=ref?[...ref.querySelectorAll('td[delta]')].length:9;
+    const cellCount=ref?[...ref.querySelectorAll('td[delta]')].length:9;
+    offset+=cellCount;
   });
 
-  const teeHdr=doc.querySelector('table.user-scores-table thead th div.cell')?.textContent?.trim()||'';
-  const wrongTees=teeHdr.toLowerCase().includes('blue')||teeHdr.includes('70.7');
+  const teeHdr  = doc.querySelector('table.user-scores-table thead th div.cell')?.textContent?.trim() || '';
+  const detectedTee = detectTee(teeHdr);
+  const wrongTees   = detectedTee !== null && !detectedTee.isTarget;
   const txt=doc.body?.textContent||'';
   let hcpIndex=null,courseHcp=null;
   const im=txt.match(/[Hh]andicap\s+[Ii]ndex[:\s]+([0-9]+\.?[0-9]*)/);
@@ -307,10 +337,10 @@ function parseSmartGolfHTML(html){
 
   let correctedNet=false,correctedCH=null,finalNet={...net};
   if(wrongTees&&hcpIndex!=null&&Object.keys(gross).length>0){
-    const{netScores:wn,courseHcp:wch}=recalcWhiteNet(gross,hcpIndex);
+    const{netScores:wn,courseHcp:wch}=recalcToWhite(gross,hcpIndex);
     finalNet=wn; correctedNet=true; correctedCH=wch; courseHcp=wch;
   }
-  return{netScores:finalNet,grossScores:gross,teeHdr,wrongTees,hcpIndex,courseHcp,correctedNet,correctedCH,holesFound:Object.keys(finalNet).length};
+  return{netScores:finalNet,grossScores:gross,teeHdr,detectedTee,wrongTees,hcpIndex,courseHcp,correctedNet,correctedCH,holesFound:Object.keys(finalNet).length};
 }
 
 // ── Fetch via proxy ──────────────────────────────────────────────────────────
@@ -364,7 +394,8 @@ function renderChips(){
     const on=active.includes(p.name);
     const pd=playerData[p.name];
     const corrected=pd?.correctedNet, wrongBad=pd?.wrongTees&&!pd?.correctedNet;
-    const sub=p.id?`#${p.id}${pd?.holesFound>0?' ✓':''}${corrected?' ⚠→✓':wrongBad?' ⚠BLUE':''}`:'no ID';
+    const teeLbl=pd?.detectedTee?.label||'';
+    const sub=p.id?`#${p.id}${pd?.holesFound>0?' ✓':''}${corrected?` ${teeLbl}→W`:wrongBad?` ⚠${teeLbl}`:''}`:'no ID';
     return `<div class="chip ${on?'chip-on':'chip-off'}${!p.id?' chip-noid':''}" onclick="togglePlayer('${p.name.replace(/'/g,"\\'")}')" >
       <div class="chip-dot ${on?'dot-on':'dot-off'}"></div>
       ${p.name}<span class="${p.id?'chip-sub':'chip-sub-err'}">${sub}</span>
@@ -377,8 +408,8 @@ function renderStatus(fetched){
   const corrected=fetched.filter(p=>playerData[p.name]?.correctedNet);
   const bad=fetched.filter(p=>playerData[p.name]?.wrongTees&&!playerData[p.name]?.correctedNet);
   let h=`<div class="status s-ok">✓ ${fetched.map(p=>`${p.name.split(' ')[0]} (${playerData[p.name].holesFound}h)`).join(' · ')}</div>`;
-  if(corrected.length) h+=`<div class="status s-warn">⚠ Blue→White Tees auto-corrected: <strong>${corrected.map(p=>p.name).join(', ')}</strong></div>`;
-  if(bad.length) h+=`<div class="status s-err">⛔ Blue Tees, could not correct: <strong>${bad.map(p=>p.name).join(', ')}</strong></div>`;
+  if(corrected.length) h+=`<div class="status s-warn">⚠ Tee corrected → White Tees: ${corrected.map(p=>`<strong>${p.name}</strong> (${playerData[p.name].detectedTee?.label||'unknown'} → White)`).join(', ')}</div>`;
+  if(bad.length) h+=`<div class="status s-err">⛔ Wrong tees, could not auto-correct (missing gross scores or HCP): <strong>${bad.map(p=>p.name).join(', ')}</strong></div>`;
   $('statusArea').innerHTML=h;
 }
 
@@ -389,16 +420,19 @@ function renderResults(fetched,holes,skinCount,totalSkins,totalPot,perSkin,wager
     const pd=playerData[p.name],skins=skinCount[p.name]||0;
     const tot=Array.from({length:18},(_,i)=>i+1).reduce((s,h)=>s+(pd.netScores[h]??0),0);
     let nameSfx='';
-    if(pd.correctedNet) nameSfx=`<br/><span class="tee-badge tee-ok">✓ Blue→White (CH ${pd.correctedCH})</span>`;
-    else if(pd.wrongTees) nameSfx=`<br/><span class="tee-badge tee-err">⚠ Blue Tees</span>`;
+    if(pd.correctedNet) nameSfx=`<br/><span class="tee-badge tee-ok">✓ ${pd.detectedTee?.label||'Wrong'}→White (CH ${pd.correctedCH})</span>`;
+    else if(pd.wrongTees) nameSfx=`<br/><span class="tee-badge tee-err">⚠ ${pd.detectedTee?.label||'Wrong'} Tees — not corrected</span>`;
     const cells=Array.from({length:18},(_,i)=>i+1).map(h=>{
       const score=pd.netScores[h],hd=holes[h-1];
       const win=hd.winner===p.name;
       const tie=hd.tied&&hd.scores.some(s=>s.name===p.name&&s.score===hd.min);
       return score==null?`<td class="c-none">–</td>`:`<td class="${win?'c-win':tie?'c-tie':'c-norm'}">${score}</td>`;
     }).join('');
+    const hcpStr   = pd.hcpIndex  != null ? pd.hcpIndex.toFixed(1) : '–';
+    const chStr    = pd.courseHcp != null ? pd.courseHcp           : '–';
     return `<tr><td class="sticky-col">${p.name}${nameSfx}</td>
-      <td>${pd.hcpIndex??'–'}</td><td>${pd.courseHcp??'–'}</td>
+      <td style="font-weight:500;color:var(--text)">${hcpStr}</td>
+      <td style="font-weight:500;color:var(--gold-lit)">${chStr}</td>
       <td style="font-weight:500">${tot||'–'}</td><td>${badge(skins)}</td>${cells}</tr>`;
   }).join('');
   const winRow=holes.map(h=>
@@ -447,8 +481,9 @@ function renderGrid(fetched,holes,skinCount){
       const tie=hd.tied&&hd.scores.some(s=>s.name===p.name&&s.score===hd.min);
       return `<td class="${win?'h-win':tie?'h-tie':'h-loss'}">${score}</td>`;
     }).join('');
-    const firstName=p.name.split(' ')[0];
-    return `<tr><td class="sticky-col">${p.name}<br/><span style="font-size:9px;color:var(--muted);font-family:var(--mono)">${badge(skins)} ${skins} skin${skins!==1?'s':''}</span></td>${cells}</tr>`;
+    const hcpStr = pd.hcpIndex  != null ? `HCP ${pd.hcpIndex.toFixed(1)}` : '';
+    const chStr  = pd.courseHcp != null ? `CH ${pd.courseHcp}` : '';
+    return `<tr><td class="sticky-col">${p.name}<br/><span style="font-size:9px;color:var(--muted);font-family:var(--mono)">${hcpStr}${hcpStr&&chStr?' · ':''}${chStr} ${badge(skins)} ${skins}sk</span></td>${cells}</tr>`;
   }).join('');
 
   // Hole summary row — min score per hole
@@ -486,8 +521,8 @@ function renderPayout(fetched,skinCount,totalSkins,totalPot,perSkin){
     const skins=skinCount[p.name]||0,pd=playerData[p.name];
     return `<tr>
       <td class="pay-name">${p.name}</td>
-      <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${pd.hcpIndex??'–'}</td>
-      <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${pd.courseHcp??'–'}</td>
+      <td style="color:var(--text);font-family:var(--mono);font-size:11px">${pd.hcpIndex!=null?pd.hcpIndex.toFixed(1):'–'}</td>
+      <td style="color:var(--gold-lit);font-family:var(--mono);font-size:11px;font-weight:500">${pd.courseHcp??'–'}</td>
       <td>${badge(skins)}</td>
       <td class="${skins>0?'pay-win':'pay-zero'}">${skins>0?fmt(skins*perSkin):'–'}</td>
     </tr>`;
