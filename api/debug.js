@@ -14,61 +14,67 @@ export default async function handler(req, res) {
         'Accept-Language': 'en-CA,en;q=0.9',
         'Cache-Control': 'no-cache',
         'Cookie':        `_smart_golf_league_session=${session}`,
-        'Sec-Fetch-Dest':'document',
-        'Sec-Fetch-Mode':'navigate',
-        'Sec-Fetch-Site':'none',
-        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest':'document','Sec-Fetch-Mode':'navigate',
+        'Sec-Fetch-Site':'none','Upgrade-Insecure-Requests':'1',
       },
       redirect: 'follow',
     });
 
     const html = await response.text();
 
-    // Count tables
-    const tableMatches = html.match(/user-scores-table/g) || [];
+    // Count score tables
+    const tableCount = (html.match(/user-scores-table/g)||[]).length;
 
-    // Extract all table HTML chunks
-    const tableChunks = [];
-    let pos = 0;
-    while (true) {
-      const start = html.indexOf('<table', pos);
-      if (start === -1) break;
-      const end = html.indexOf('</table>', start) + 8;
-      const chunk = html.slice(start, end);
-      if (chunk.includes('user-scores-table')) {
-        tableChunks.push(chunk.slice(0, 2000)); // first 2000 chars of each table
-      }
-      pos = end;
+    // Extract ALL delta cells in order — this is what the parser actually sees
+    const deltaPattern = /delta="([^"]*)"[^>]*>([\s\S]*?)<\/td>/g;
+    const allDeltas = [];
+    let m;
+    while((m=deltaPattern.exec(html))!==null){
+      const txt = m[2].replace(/<[^>]+>/g,'').trim();
+      allDeltas.push({delta:m[1], text:txt});
     }
 
-    // Look for HCP-related text
-    const hcpLines = [];
-    html.split('\n').forEach((line, i) => {
-      const l = line.toLowerCase();
-      if (l.includes('handicap') || l.includes('hcp') || l.includes('index') || l.includes('course')) {
-        hcpLines.push({ line: i, text: line.trim().slice(0, 200) });
+    // Extract all rows containing "Net Score" or "Gross Score"
+    const rowPattern = /<tr>([\s\S]*?)<\/tr>/g;
+    const scoreRows = [];
+    while((m=rowPattern.exec(html))!==null){
+      const row = m[1];
+      if(row.includes('Net Score')||row.includes('Gross Score')){
+        // pull all cell text values
+        const cellTexts = [...row.matchAll(/<div[^>]*>([\s\S]*?)<\/div>/g)]
+          .map(c=>c[1].replace(/<[^>]+>/g,'').trim())
+          .filter(t=>t);
+        scoreRows.push(cellTexts.slice(0,12));
       }
-    });
+    }
 
-    // Look for delta attributes
-    const deltaMatches = (html.match(/delta="[^"]+"/g) || []).slice(0, 40);
+    // Extract all th text in score tables
+    const thTexts = [...html.matchAll(/<th[^>]*>\s*<div[^>]*>([^<]+)<\/div>/g)]
+      .map(m=>m[1].trim()).slice(0,30);
 
+    // Look for HCP/index numbers anywhere in the page
+    const hcpMatches = [];
+    const hcpPattern = /([Hh]andicap|[Ii]ndex|HCP|hcp|[Cc]ourse)[^<]{0,30}?([0-9]+\.?[0-9]*)/g;
+    while((m=hcpPattern.exec(html))!==null){
+      hcpMatches.push(m[0].replace(/<[^>]+>/g,'').trim().slice(0,80));
+    }
+
+    // Full HTML — split into chunks for readability
     res.status(200).json({
-      httpStatus:       response.status,
-      finalUrl:         response.url,
-      sessionSet:       !!session,
-      sessionLength:    session.length,
-      htmlLength:       html.length,
-      hasScoreTable:    html.includes('user-scores-table'),
-      tableCount:       tableMatches.length,
-      deltaCount:       (html.match(/delta=/g)||[]).length,
-      deltaExamples:    deltaMatches,
-      hcpRelatedLines:  hcpLines.slice(0, 20),
-      tableChunks,      // full table HTML for inspection
-      fullHtml:         html.slice(0, 3000), // first 3000 chars
+      httpStatus:   response.status,
+      sessionSet:   !!session,
+      tableCount,
+      deltaCount:   allDeltas.length,
+      firstDeltas:  allDeltas.slice(0,30),  // first 30 delta cells in page order
+      scoreRows,                             // Net/Gross rows with cell values
+      thTexts,                              // all th content
+      hcpMatches:   hcpMatches.slice(0,15),
+      html0_2000:   html.slice(0,2000),
+      html2000_4000:html.slice(2000,4000),
+      html4000_6000:html.slice(4000,6000),
     });
 
   } catch(err) {
-    res.status(200).json({ fetchError: err.message });
+    res.status(200).json({fetchError:err.message});
   }
 }
