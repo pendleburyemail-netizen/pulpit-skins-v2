@@ -1,6 +1,4 @@
 {
   "name": "pulpit-club-skins",
-  "version": "1.0.0",
-  "description": "Pulpit Club skins game calculator",
-  "engines": { "node": ">=18" }
+  "version": "1.0.0"
 }
