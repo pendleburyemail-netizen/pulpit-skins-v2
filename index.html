@@ -188,7 +188,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
     <div class="modal-handle"></div>
     <h3>PLAYERS & IDs</h3>
     <div class="modal-sub">
-      Enter SmartGolf ID, or type <strong>manual</strong> to enter scores by hand.
+      Enter each player's SmartGolf ID. Enter <strong>000000</strong> to input scores manually.
       IDs may change each week.
     </div>
     <div class="modal-section">SmartGolf IDs</div>
@@ -301,106 +301,117 @@ function recalcToWhite(gross,hcpIndex){
 }
 
 // ── HTML parser ───────────────────────────────────────────────────────────────
+// Confirmed SmartGolf structure (from Brett's actual HTML):
+//   <table class="user-scores-table"> × 2 (front 9, back 9) in an hstack div
+//   thead: first th = tee info ("Blue Tees (70.7)"), rest = hole numbers
+//   tbody rows: Par | Gross Score | Net Score
+//   Score cells: <td delta="N"><div class="cell ...">SCORE</div></td>
+//   Label cells: <td><div class="cell">Net Score</div></td>  (no delta attr)
 function parseSmartGolfHTML(html){
-  const doc=new DOMParser().parseFromString(html,'text/html');
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const net = {}, gross = {};
 
-  // Find all score tables — there are TWO per player (front 9 + back 9)
-  // They sit inside a turbo-frame and use class "user-scores-table"
-  const tables=[...doc.querySelectorAll('table.user-scores-table')];
-  const net={}, gross={};
-  let offset=0;
+  const tables = [...doc.querySelectorAll('table.user-scores-table')];
 
-  tables.forEach((table,ti)=>{
-    const rows=[...table.querySelectorAll('tbody tr')];
-    let netRow=null, grossRow=null;
-    rows.forEach(r=>{
-      // Label cell is the FIRST td (no delta attr), contains a div.cell with text
-      const cells=[...r.querySelectorAll('td')];
-      if(!cells.length) return;
-      // First cell is the row label (no delta attribute)
-      const firstCell=cells[0];
-      const hasDelta=firstCell.hasAttribute('delta');
-      if(hasDelta) return; // skip if first cell is a score cell
-      const lbl=firstCell.textContent.trim();
-      if(lbl==='Net Score')   netRow=r;
-      if(lbl==='Gross Score') grossRow=r;
-    });
+  tables.forEach((table, tableIndex) => {
+    // Table 0 = front 9 (holes 1-9), Table 1 = back 9 (holes 10-18)
+    const holeBase = tableIndex * 9;
+    const rows = [...table.querySelectorAll('tbody tr')];
 
-    // Extract score cells (those with delta attribute) from each row
-    const extractScores=(row,map)=>{
-      if(!row) return 0;
-      const scoreCells=[...row.querySelectorAll('td[delta]')];
-      scoreCells.forEach((cell,i)=>{
-        const h=offset+i+1;
-        const v=parseInt(cell.textContent.trim());
-        if(!isNaN(v)&&h>=1&&h<=18) map[h]=v;
+    rows.forEach(row => {
+      const allTds = [...row.querySelectorAll('td')];
+      if (!allTds.length) return;
+
+      // Row label is first td — identified by NOT having a delta attribute
+      // and containing text like "Net Score" / "Gross Score" / "Par"
+      const labelTd = allTds[0];
+      if (labelTd.hasAttribute('delta')) return;
+      const label = labelTd.textContent.trim();
+      if (label !== 'Net Score' && label !== 'Gross Score') return;
+
+      const map = label === 'Net Score' ? net : gross;
+
+      // Score cells are all remaining tds WITH delta attribute
+      // Last cell (OUT/IN total) has no delta — it's excluded automatically
+      const scoreTds = allTds.filter(td => td.hasAttribute('delta'));
+
+      scoreTds.forEach((td, i) => {
+        const hole = holeBase + i + 1;
+        if (hole < 1 || hole > 18) return;
+        // Score lives inside a nested div: <td delta="1"><div class="cell cell--up">5</div></td>
+        const div = td.querySelector('div');
+        const score = parseInt(div ? div.textContent.trim() : td.textContent.trim());
+        if (!isNaN(score)) map[hole] = score;
       });
-      return scoreCells.length;
-    };
-
-    const netCount  = extractScores(netRow,   net);
-    const grossCount= extractScores(grossRow,  gross);
-    // Advance offset by number of holes in this table (9 for front, 9 for back)
-    // Use whichever row had more cells, fallback to 9
-    offset += Math.max(netCount, grossCount, 0) || 9;
+    });
   });
 
   // ── Tee detection ─────────────────────────────────────────────────────────
-  // The tee info is in the FIRST th of the FIRST table header
-  const firstTh = doc.querySelector('table.user-scores-table thead tr th:first-child');
+  // First <th> of front-9 table contains e.g. "Blue Tees (70.7)"
+  const firstTh = doc.querySelector('table.user-scores-table thead th');
   const teeHdr  = firstTh ? firstTh.textContent.trim() : '';
   const detectedTee = detectTee(teeHdr);
   const wrongTees   = detectedTee !== null && !detectedTee.isTarget;
 
   // ── HCP extraction ────────────────────────────────────────────────────────
-  // SmartGolf shows HCP info in various elements — scan all text nodes
-  let hcpIndex=null, courseHcp=null;
-  const allText = doc.body ? doc.body.innerText || doc.body.textContent : '';
+  // SmartGolf embeds HCP data in the page body text — not always in tables
+  let hcpIndex = null, courseHcp = null;
+  const bodyText = (doc.body && doc.body.textContent) || '';
 
-  // Try common patterns
-  const patterns=[
-    [/handicap\s+index[:\s]*([0-9]+\.?[0-9]*)/i,   'idx'],
-    [/hcp\s+index[:\s]*([0-9]+\.?[0-9]*)/i,         'idx'],
-    [/index[:\s]*([0-9]+\.?[0-9]*)/i,               'idx'],
-    [/course\s+handicap[:\s]*([0-9]+)/i,             'ch' ],
-    [/playing\s+handicap[:\s]*([0-9]+)/i,            'ch' ],
-    [/course\s+hcp[:\s]*([0-9]+)/i,                  'ch' ],
+  // HCP Index — decimal number between 0.0 and 54.0
+  const idxPatterns = [
+    /handicap\s+index\s*[:\-]?\s*([0-9]{1,2}\.[0-9])/i,
+    /hcp\s+index\s*[:\-]?\s*([0-9]{1,2}\.[0-9])/i,
+    /index\s*[:\-]?\s*([0-9]{1,2}\.[0-9])/i,
+    /([0-9]{1,2}\.[0-9])\s*(?:index|hcp|handicap)/i,
   ];
-  patterns.forEach(([re,type])=>{
-    const m=allText.match(re);
-    if(m){
-      if(type==='idx'&&hcpIndex==null)  hcpIndex=parseFloat(m[1]);
-      if(type==='ch' &&courseHcp==null) courseHcp=parseInt(m[1]);
-    }
-  });
+  for (const re of idxPatterns) {
+    const m = bodyText.match(re);
+    if (m) { hcpIndex = parseFloat(m[1]); break; }
+  }
 
-  // Also try scanning individual table cells for numeric HCP values
-  // SmartGolf often puts HCP index in a caption or separate cell
-  if(hcpIndex==null){
-    doc.querySelectorAll('td,th,caption,span,div').forEach(el=>{
-      const txt=el.textContent.trim();
-      // Look for patterns like "12.4" that could be an index (between 0 and 54)
-      if(/^[0-9]+\.[0-9]$/.test(txt)){
-        const v=parseFloat(txt);
-        if(v>=0&&v<=54&&hcpIndex==null) hcpIndex=v;
+  // Course Handicap — whole number
+  const chPatterns = [
+    /course\s+handicap\s*[:\-]?\s*([0-9]{1,2})/i,
+    /playing\s+handicap\s*[:\-]?\s*([0-9]{1,2})/i,
+    /course\s+hcp\s*[:\-]?\s*([0-9]{1,2})/i,
+  ];
+  for (const re of chPatterns) {
+    const m = bodyText.match(re);
+    if (m) { courseHcp = parseInt(m[1]); break; }
+  }
+
+  // Fallback: scan leaf elements for a decimal that looks like an HCP index
+  if (hcpIndex === null) {
+    for (const el of doc.querySelectorAll('td, th, span, div, small, b, strong, p, caption')) {
+      if (el.children.length > 0) continue; // leaf nodes only
+      const txt = el.textContent.trim();
+      if (/^[0-9]{1,2}\.[0-9]$/.test(txt)) {
+        const v = parseFloat(txt);
+        if (v >= 0 && v <= 54) { hcpIndex = v; break; }
       }
-    });
+    }
   }
 
   // ── Tee correction ────────────────────────────────────────────────────────
-  let correctedNet=false, correctedCH=null, finalNet={...net};
-  const hasGross = Object.keys(gross).length>=9;
-
-  if(wrongTees && hcpIndex!=null && hasGross){
-    const{netScores:wn,courseHcp:wch}=recalcToWhite(gross,hcpIndex);
-    finalNet=wn; correctedNet=true; correctedCH=wch; courseHcp=wch;
+  let correctedNet = false, correctedCH = null, finalNet = {...net};
+  if (wrongTees && hcpIndex !== null && Object.keys(gross).length >= 9) {
+    const {netScores: wn, courseHcp: wch} = recalcToWhite(gross, hcpIndex);
+    finalNet = wn; correctedNet = true; correctedCH = wch; courseHcp = wch;
   }
 
-  return{
-    netScores:finalNet, grossScores:gross, teeHdr, detectedTee,
-    wrongTees, hcpIndex, courseHcp, correctedNet, correctedCH,
-    holesFound:Object.keys(finalNet).length,
-    debugInfo:{tableCount:tables.length, netKeys:Object.keys(net), grossKeys:Object.keys(gross), teeHdr, allTextSnippet:allText.slice(0,500)}
+  return {
+    netScores: finalNet, grossScores: gross,
+    teeHdr, detectedTee, wrongTees,
+    hcpIndex, courseHcp, correctedNet, correctedCH,
+    holesFound: Object.keys(finalNet).length,
+    _debug: {
+      tableCount: tables.length,
+      netHoles:   Object.keys(net).map(Number).sort((a,b)=>a-b),
+      grossHoles: Object.keys(gross).map(Number).sort((a,b)=>a-b),
+      teeHdr,
+      bodySnippet: bodyText.slice(0, 400),
+    }
   };
 }
 
@@ -441,7 +452,7 @@ function calcSkins(fetched){
 function $(id){return document.getElementById(id);}
 function fmt(n){return n%1===0?`$${n}`:`$${n.toFixed(2)}`;}
 function badge(n){return n>0?`<span class="badge badge-gold">${n}</span>`:`<span class="badge badge-zero">0</span>`;}
-function isManual(p){return p.id==='manual'||p.id===-1;}
+function isManual(p){return p.id==='000000'||p.id===0||p.id==='0';}
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 window.switchTab=function(tab){
@@ -672,10 +683,10 @@ function openModal(){
   $('modalRows').innerHTML=roster.map(p=>`
     <div class="modal-row">
       <span class="modal-name">${p.name}</span>
-      <input class="modal-inp ${isManual(p)?'manual-hint':''}" type="text"
-        inputmode="numeric" placeholder="SmartGolf ID or 'manual'"
+      <input class="modal-inp" type="number" inputmode="numeric"
+        placeholder="SmartGolf ID (000000=manual)"
         id="mid_${p.name.replace(/\s/g,'_')}"
-        value="${isManual(p)?'manual':p.id||''}"/>
+        value="${isManual(p)?'000000':p.id||''}"/>
     </div>`).join('');
   $('modal').style.display='flex';
 }
@@ -684,8 +695,8 @@ function saveIds(){
   roster.forEach(p=>{
     const inp=$(`mid_${p.name.replace(/\s/g,'_')}`);
     if(!inp) return;
-    const val=inp.value.trim().toLowerCase();
-    if(val==='manual') p.id='manual';
+    const val=inp.value.trim();
+    if(val==='000000'||val==='0') p.id='000000';
     else if(val==='') p.id=null;
     else p.id=parseInt(val)||null;
   });
