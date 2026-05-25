@@ -161,6 +161,8 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 
 <div class="wager-row">
   <input class="week-input" id="weekLabel" value="Week 1 – May 20, 2026" placeholder="Week label"/>
+  <span class="wager-label" style="white-space:nowrap">GW ID</span>
+  <input class="wager-input" id="gameWeekId" type="number" inputmode="numeric" value="8145" style="width:80px" title="SmartGolf game_week_id from the weekly results URL"/>
   <span class="wager-label">$</span>
   <input class="wager-input" id="wager" type="number" value="20" min="1"/>
 </div>
@@ -313,12 +315,23 @@ function recalcToWhite(gross,hcpIndex){
 }
 
 // ── HTML parser ───────────────────────────────────────────────────────────────
-// Confirmed SmartGolf structure (from Brett's actual HTML):
-//   <table class="user-scores-table"> × 2 (front 9, back 9) in an hstack div
-//   thead: first th = tee info ("Blue Tees (70.7)"), rest = hole numbers
-//   tbody rows: Par | Gross Score | Net Score
-//   Score cells: <td delta="N"><div class="cell ...">SCORE</div></td>
-//   Label cells: <td><div class="cell">Net Score</div></td>  (no delta attr)
+// CONFIRMED SmartGolf structure from rawhtml inspection:
+//
+// FRONT 9 table (table[0]):
+//   thead row: "Blue Tees (70.7)" | 1 | 2 | ... | 9 | OUT
+//   tbody row 0: Par               | 4 | 5 | ... | 4 | 36   (no delta attrs)
+//   tbody row 1: Gross Score label | 5 | 6 | ... | 7 | 44   (delta attrs on scores)
+//   tbody row 2: Net Score label   | 4 | 5 | ... | 6 | 38   (delta attrs on scores)
+//
+// BACK 9 table (table[1]):
+//   thead row: " " | 10 | 11 | ... | 18 | IN   (NO tee label in first th)
+//   tbody row 0: (no label) | 4 | 5 | ... | 4 | 36   ← Par row, no labels
+//   tbody row 1: (no label) | 5 | 8 | ... | 7 | 48   ← Gross row, no labels
+//   tbody row 2: (no label) | 4 | 8 | ... | 6 | 42   ← Net row, no labels
+//
+// KEY INSIGHT: Back 9 has NO label cells — must use ROW INDEX (0=Par,1=Gross,2=Net)
+// HCP index and course handicap are NOT present on this page — must be calculated.
+
 function parseSmartGolfHTML(html){
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const net = {}, gross = {};
@@ -326,121 +339,152 @@ function parseSmartGolfHTML(html){
   const tables = [...doc.querySelectorAll('table.user-scores-table')];
 
   tables.forEach((table, tableIndex) => {
-    // Table 0 = front 9 (holes 1-9), Table 1 = back 9 (holes 10-18)
-    const holeBase = tableIndex * 9;
+    const holeBase = tableIndex * 9; // table 0→holes 1-9, table 1→holes 10-18
     const rows = [...table.querySelectorAll('tbody tr')];
 
-    rows.forEach(row => {
+    // Determine which row is gross and which is net
+    // For front 9: check label text. For back 9: use position (row 1=gross, row 2=net)
+    let grossRowIndex = 1;
+    let netRowIndex   = 2;
+
+    if (tableIndex === 0) {
+      // Front 9: labels present — find by text
+      rows.forEach((row, ri) => {
+        const firstTd = row.querySelector('td');
+        if (!firstTd) return;
+        const lbl = firstTd.textContent.trim();
+        if (lbl === 'Gross Score') grossRowIndex = ri;
+        if (lbl === 'Net Score')   netRowIndex   = ri;
+      });
+    }
+    // Back 9: no labels — use positions 1 and 2 (same order as front 9)
+
+    const extractFromRow = (rowIndex, map) => {
+      const row = rows[rowIndex];
+      if (!row) return;
       const allTds = [...row.querySelectorAll('td')];
-      if (!allTds.length) return;
-
-      // Row label is first td — identified by NOT having a delta attribute
-      // and containing text like "Net Score" / "Gross Score" / "Par"
-      const labelTd = allTds[0];
-      if (labelTd.hasAttribute('delta')) return;
-      const label = labelTd.textContent.trim();
-      if (label !== 'Net Score' && label !== 'Gross Score') return;
-
-      const map = label === 'Net Score' ? net : gross;
-
-      // Score cells are all remaining tds WITH delta attribute
-      // Last cell (OUT/IN total) has no delta — it's excluded automatically
+      // Score cells have delta attribute; label/total cells do not
+      // For back 9, ALL cells may lack labels — use delta attr to identify scores
+      // If no delta attrs exist, fall back to all tds except first and last
       const scoreTds = allTds.filter(td => td.hasAttribute('delta'));
+      const useTds   = scoreTds.length > 0
+        ? scoreTds
+        : allTds.slice(tableIndex === 1 ? 0 : 1, -1); // back 9 has no label cell
 
-      scoreTds.forEach((td, i) => {
+      useTds.forEach((td, i) => {
         const hole = holeBase + i + 1;
         if (hole < 1 || hole > 18) return;
-        // Score lives inside a nested div: <td delta="1"><div class="cell cell--up">5</div></td>
-        const div = td.querySelector('div');
-        const score = parseInt(div ? div.textContent.trim() : td.textContent.trim());
+        const div   = td.querySelector('div');
+        const score = parseInt((div || td).textContent.trim());
         if (!isNaN(score)) map[hole] = score;
       });
-    });
+    };
+
+    extractFromRow(grossRowIndex, gross);
+    extractFromRow(netRowIndex,   net);
   });
 
   // ── Tee detection ─────────────────────────────────────────────────────────
-  // First <th> of front-9 table contains e.g. "Blue Tees (70.7)"
-  const firstTh = doc.querySelector('table.user-scores-table thead th');
-  const teeHdr  = firstTh ? firstTh.textContent.trim() : '';
-  const detectedTee = detectTee(teeHdr);
-  const wrongTees   = detectedTee !== null && !detectedTee.isTarget;
+  // First th of front-9 table = tee info e.g. "Blue Tees (70.7)"
+  const firstTh    = doc.querySelector('table.user-scores-table thead th');
+  const teeHdr     = firstTh ? firstTh.textContent.trim() : '';
 
-  // ── HCP extraction ────────────────────────────────────────────────────────
-  // SmartGolf embeds HCP data in the page body text — not always in tables
+// ── Parse HCP data from weekly results HTML ───────────────────────────────────
+// Weekly results page has a table with columns including HCP Index and Course HCP
+// We search for the player's row and extract the values
+function parseHcpFromWeeklyResults(html, playerName) {
+  if (!html || html.length < 100) return { hcpIndex: null, courseHcp: null };
+  const doc  = new DOMParser().parseFromString(html, 'text/html');
+  const rows = [...doc.querySelectorAll('tr, .player-row, [data-player]')];
+  const lastName = playerName.split(' ').pop().toLowerCase();
+
+  // Find the row containing the player's name
+  let targetRow = null;
+  for (const row of rows) {
+    if (row.textContent.toLowerCase().includes(lastName)) {
+      targetRow = row; break;
+    }
+  }
+
+  if (!targetRow) {
+    // Fallback: scan all text for decimal numbers near the player name
+    const bodyText = doc.body ? doc.body.textContent : '';
+    const nameIdx  = bodyText.toLowerCase().indexOf(lastName);
+    if (nameIdx >= 0) {
+      const nearby = bodyText.slice(nameIdx, nameIdx + 200);
+      const idxMatch = nearby.match(/([0-9]{1,2}\.[0-9])/);
+      const chMatch  = nearby.match(/\b([0-9]{1,2})\b/g);
+      return {
+        hcpIndex:  idxMatch ? parseFloat(idxMatch[1]) : null,
+        courseHcp: null,
+      };
+    }
+    return { hcpIndex: null, courseHcp: null };
+  }
+
+  // Extract all numbers from the row
+  const cells = [...targetRow.querySelectorAll('td, th')];
   let hcpIndex = null, courseHcp = null;
-  const bodyText = (doc.body && doc.body.textContent) || '';
-
-  // HCP Index — decimal number between 0.0 and 54.0
-  const idxPatterns = [
-    /handicap\s+index\s*[:\-]?\s*([0-9]{1,2}\.[0-9])/i,
-    /hcp\s+index\s*[:\-]?\s*([0-9]{1,2}\.[0-9])/i,
-    /index\s*[:\-]?\s*([0-9]{1,2}\.[0-9])/i,
-    /([0-9]{1,2}\.[0-9])\s*(?:index|hcp|handicap)/i,
-  ];
-  for (const re of idxPatterns) {
-    const m = bodyText.match(re);
-    if (m) { hcpIndex = parseFloat(m[1]); break; }
-  }
-
-  // Course Handicap — whole number
-  const chPatterns = [
-    /course\s+handicap\s*[:\-]?\s*([0-9]{1,2})/i,
-    /playing\s+handicap\s*[:\-]?\s*([0-9]{1,2})/i,
-    /course\s+hcp\s*[:\-]?\s*([0-9]{1,2})/i,
-  ];
-  for (const re of chPatterns) {
-    const m = bodyText.match(re);
-    if (m) { courseHcp = parseInt(m[1]); break; }
-  }
-
-  // Fallback: scan leaf elements for a decimal that looks like an HCP index
-  if (hcpIndex === null) {
-    for (const el of doc.querySelectorAll('td, th, span, div, small, b, strong, p, caption')) {
-      if (el.children.length > 0) continue; // leaf nodes only
-      const txt = el.textContent.trim();
-      if (/^[0-9]{1,2}\.[0-9]$/.test(txt)) {
-        const v = parseFloat(txt);
-        if (v >= 0 && v <= 54) { hcpIndex = v; break; }
-      }
+  for (const cell of cells) {
+    const txt = cell.textContent.trim();
+    // HCP Index: decimal like 12.4
+    if (/^[0-9]{1,2}\.[0-9]$/.test(txt)) {
+      const v = parseFloat(txt);
+      if (v >= 0 && v <= 54 && hcpIndex === null) hcpIndex = v;
+    }
+    // Course HCP: whole number between 0 and 54
+    if (/^[0-9]{1,2}$/.test(txt)) {
+      const v = parseInt(txt);
+      if (v >= 0 && v <= 54 && courseHcp === null) courseHcp = v;
     }
   }
-
-  // ── Tee correction ────────────────────────────────────────────────────────
-  let correctedNet = false, correctedCH = null, finalNet = {...net};
-  if (wrongTees && hcpIndex !== null && Object.keys(gross).length >= 9) {
-    const {netScores: wn, courseHcp: wch} = recalcToWhite(gross, hcpIndex);
-    finalNet = wn; correctedNet = true; correctedCH = wch; courseHcp = wch;
-  }
-
-  return {
-    netScores: finalNet, grossScores: gross,
-    teeHdr, detectedTee, wrongTees,
-    hcpIndex, courseHcp, correctedNet, correctedCH,
-    holesFound: Object.keys(finalNet).length,
-    _debug: {
-      tableCount: tables.length,
-      netHoles:   Object.keys(net).map(Number).sort((a,b)=>a-b),
-      grossHoles: Object.keys(gross).map(Number).sort((a,b)=>a-b),
-      teeHdr,
-      bodySnippet: bodyText.slice(0, 400),
-    }
-  };
+  return { hcpIndex, courseHcp };
 }
 
 // ── Fetch via proxy ───────────────────────────────────────────────────────────
 async function fetchPlayer(player){
-  const res=await fetch(`/api/scores?id=${player.id}`);
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  const ct=res.headers.get('content-type')||'';
-  if(ct.includes('json')){
-    const j=await res.json();
-    if(j.error==='NO_SESSION') throw new Error('NO_SESSION');
-    const reason=j.hasLogin?'SmartGolf requires a session cookie':
-                 j.error==='NO_SCORECARD'?`No scorecard found (HTTP ${j.httpStatus})`:
-                 j.error||`HTTP ${res.status}`;
+  const gameWeekId = $('gameWeekId')?.value || '';
+  const url = `/api/scores?id=${player.id}` +
+    (gameWeekId ? `&gameWeekId=${gameWeekId}&playerName=${encodeURIComponent(player.name)}` : '');
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('json')) {
+    const j = await res.json();
+    if (j.error === 'NO_SESSION') throw new Error('NO_SESSION');
+    const reason = j.hasLogin ? 'SmartGolf requires a session cookie' :
+                   j.error === 'NO_SCORECARD' ? `No scorecard found (HTTP ${j.httpStatus})` :
+                   j.error || `HTTP ${res.status}`;
     throw new Error(reason);
   }
-  return parseSmartGolfHTML(await res.text());
+
+  const combined  = await res.text();
+  const separator = '<!--HCP_DATA-->';
+  const sepIdx    = combined.indexOf(separator);
+  const scoresHtml = sepIdx >= 0 ? combined.slice(0, sepIdx) : combined;
+  const hcpHtml    = sepIdx >= 0 ? combined.slice(sepIdx + separator.length) : '';
+
+  const parsed = parseSmartGolfHTML(scoresHtml);
+
+  // Overlay HCP data from weekly results page if available
+  if (hcpHtml.length > 100) {
+    const { hcpIndex, courseHcp } = parseHcpFromWeeklyResults(hcpHtml, player.name);
+    if (hcpIndex  !== null) parsed.hcpIndex  = hcpIndex;
+    if (courseHcp !== null) parsed.courseHcp = courseHcp;
+
+    // If tee correction needed and we now have hcpIndex, recalculate properly
+    if (parsed.wrongTees && parsed.hcpIndex !== null && Object.keys(parsed.grossScores).length >= 9) {
+      const { netScores: wn, courseHcp: wch } = recalcToWhite(parsed.grossScores, parsed.hcpIndex);
+      parsed.netScores     = wn;
+      parsed.correctedNet  = true;
+      parsed.correctedCH   = wch;
+      parsed.courseHcp     = wch;
+      parsed.holesFound    = Object.keys(wn).length;
+    }
+  }
+
+  return parsed;
 }
 
 // ── Skins calc ────────────────────────────────────────────────────────────────
