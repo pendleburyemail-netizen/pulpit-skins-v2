@@ -445,11 +445,12 @@ async function fetchOnePlayer(player) {
 // SKINS CALCULATION
 // ═══════════════════════════════════════════════════════════════════════════
 function calcSkins(players) {
+  // Only score holes where at least 2 players have a net score
   const holes = Array.from({length:18}, (_,i) => i+1).map(h => {
     const scores = players
       .map(p => ({name:p.name, score:netStore[p.name]?.[h] ?? null}))
       .filter(x => x.score != null);
-    if (!scores.length) return {hole:h, winner:null, tied:false, min:null, scores};
+    if (scores.length < 2) return {hole:h, winner:null, tied:false, min:null, scores};
     const min     = Math.min(...scores.map(s => s.score));
     const winners = scores.filter(s => s.score === min);
     return {hole:h, winner:winners.length===1?winners[0].name:null, tied:winners.length>1, min, scores};
@@ -468,10 +469,10 @@ function fmt(n)  { return n%1===0?`$${n}`:`$${n.toFixed(2)}`; }
 function badge(n){ return n>0?`<span class="badge badge-gold">${n}</span>`:`<span class="badge badge-zero">0</span>`; }
 
 function activeFetched() {
+  // Include ALL active players who have an ID (including 000000 manual players)
+  // They show in the grid with empty inputs if no scores entered yet
   return roster.filter(p =>
-    active.includes(p.name) &&
-    grossStore[p.name] &&
-    Object.keys(grossStore[p.name]).length >= 9
+    active.includes(p.name) && (hasId(p) || isManual(p))
   );
 }
 
@@ -519,23 +520,28 @@ window.togglePlayer = function(name) {
 // STATUS
 // ═══════════════════════════════════════════════════════════════════════════
 function renderStatus(players) {
-  const noHcp  = players.filter(p => !p.hcpIndex && !isManual(p));
-  const manual = players.filter(p => isManual(p));
+  const noHcp    = players.filter(p => !p.hcpIndex);
+  const manual   = players.filter(p => isManual(p));
+  const noScores = players.filter(p => !grossStore[p.name] || Object.keys(grossStore[p.name]).length === 0);
+  const hasScores= players.filter(p =>  grossStore[p.name] && Object.keys(grossStore[p.name]).length > 0);
   let h = '';
-  if (players.length) {
-    h += `<div class="status s-ok">✓ ${players.map(p => {
-      const m = metaStore[p.name] || {};
-      const hcp = m.hcpIndex  != null ? `, HCP ${m.hcpIndex}` : '';
-      const ch  = m.courseHcp != null ? `, CH ${m.courseHcp}` : '';
-      const holes = Object.keys(grossStore[p.name]||{}).length;
+  if (hasScores.length) {
+    h += `<div class="status s-ok">✓ ${hasScores.map(p => {
+      const m    = metaStore[p.name] || {};
+      const hcp  = m.hcpIndex  != null ? `, HCP ${m.hcpIndex}` : '';
+      const ch   = m.courseHcp != null ? `, CH ${m.courseHcp}` : '';
+      const holes= Object.keys(grossStore[p.name]||{}).length;
       return `${p.name.split(' ')[0]} (${holes}h${hcp}${ch})`;
     }).join(' · ')}</div>`;
+  }
+  if (noScores.length) {
+    h += `<div class="status s-info">✎ No scores yet for: ${noScores.map(p=>`<strong>${p.name.split(' ')[0]}</strong>`).join(', ')} — enter gross scores directly in the grid below.</div>`;
   }
   if (noHcp.length) {
     h += `<div class="status s-warn">⚠ No HCP Index set for: ${noHcp.map(p=>`<strong>${p.name}</strong>`).join(', ')} — net scores cannot be calculated. Add via ✏ Players.</div>`;
   }
   if (manual.length) {
-    h += `<div class="status s-info">✎ Manual entry: ${manual.map(p=>p.name).join(', ')} — edit gross scores directly in the scorecard grid.</div>`;
+    h += `<div class="status s-info">✎ Manual players: ${manual.map(p=>p.name).join(', ')} — enter gross scores directly in the grid.</div>`;
   }
   $('statusArea').innerHTML = h;
 }
@@ -593,8 +599,8 @@ function renderScorecard() {
   if (!players.length) {
     $('panel-scorecard').innerHTML = `<div class="empty">
       <div class="empty-icon">⛳</div>
-      <div class="empty-title">NO SCORES YET</div>
-      <div class="empty-sub">Click Fetch Scores, or enter gross scores<br/>directly in the grid after setting up players.</div>
+      <div class="empty-title">NO PLAYERS SELECTED</div>
+      <div class="empty-sub">Tap player chips above to include them,<br/>or add players via ✏ Players.</div>
     </div>`;
     return;
   }
@@ -625,8 +631,8 @@ function renderScorecard() {
     const hcpStr = player.hcpIndex != null  ? player.hcpIndex.toFixed(1) : '–';
     const chStr  = meta.courseHcp   != null ? String(meta.courseHcp)     : '–';
     const pname  = player.name;
-    const grossTot = H.reduce((s,h)=>(gross[h]!=null?s+gross[h]:s), 0);
-    const netTot   = H.reduce((s,h)=>(net[h]  !=null?s+net[h]  :s), 0);
+    const grossTot = H.reduce((s,h)=>(gross[h]!=null?s+gross[h]:s), 0) || null;
+    const netTot   = H.reduce((s,h)=>(net[h]  !=null?s+net[h]  :s), 0) || null;
 
     // Gross row — editable inputs
     const grossCells = H.map(h => {
