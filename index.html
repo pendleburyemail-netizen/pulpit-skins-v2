@@ -197,7 +197,8 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 </div>
 
 <div class="ctrl-bar">
-  <input class="week-input" id="weekLabel" value="Week 1 – May 20, 2026" placeholder="Week label"/>
+  <input class="week-input" id="weekLabel" value="Week 2 – May 27, 2026" placeholder="Week label"/>
+  <input class="week-input" id="roundDate" type="date" value="2026-05-27" style="max-width:150px" title="Round date — used to find correct week's scores"/>
   <span class="ctrl-label">$</span>
   <input class="wager-inp" id="wager" type="number" value="20" min="1"/>
 </div>
@@ -431,14 +432,12 @@ function parseSmartGolfHTML(html) {
 // FETCH
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchOnePlayer(player) {
-  const weekLabel = encodeURIComponent($('weekLabel').value || '');
+  const targetDate = $('roundDate')?.value || '';
   let url;
   if (player.userId && !isManual(player)) {
-    // Permanent user ID — proxy auto-discovers the weekly game_week_user ID
-    url = `/api/scores?userId=${player.userId}&weekLabel=${weekLabel}`;
+    url = `/api/scores?userId=${player.userId}` + (targetDate ? `&targetDate=${targetDate}` : '');
   } else if (player.id && !isManual(player)) {
-    // Legacy weekly game_week_user ID
-    url = `/api/scores?gwuId=${player.id}&weekLabel=${weekLabel}`;
+    url = `/api/scores?gwuId=${player.id}`;
   } else {
     throw new Error('No SmartGolf ID configured');
   }
@@ -447,14 +446,16 @@ async function fetchOnePlayer(player) {
   const ct = res.headers.get('content-type') || '';
   if (ct.includes('json')) {
     const j = await res.json();
-    if (j.error === 'NO_GWU_ID') throw new Error('Could not find this week\'s score ID on player profile page');
-    throw new Error(j.error || j.message || `HTTP ${res.status}`);
+    throw new Error(j.error === 'NO_GWU_IDS'
+      ? 'Profile page is JS-rendered — cannot auto-discover week ID. Use gwuId directly.'
+      : j.error || j.message || `HTTP ${res.status}`);
   }
-  // Capture the discovered GWU ID for display
-  const gwuId = res.headers.get('X-GWU-ID') || '';
-  const html  = await res.text();
-  const parsed = parseSmartGolfHTML(html);
-  parsed.gwuId = gwuId;
+  const dateMatch = res.headers.get('X-Date-Match');
+  const gwuId     = res.headers.get('X-GWU-ID') || '';
+  const html      = await res.text();
+  const parsed    = parseSmartGolfHTML(html);
+  parsed.gwuId      = gwuId;
+  parsed.dateMatched = dateMatch !== 'false';
   return parsed;
 }
 
@@ -854,6 +855,10 @@ async function fetchAll() {
     try {
       const parsed = await fetchOnePlayer(p);
       if (Object.keys(parsed.gross).length >= 9) {
+        // Warn if date matching failed (got most recent round instead of target)
+        if (!parsed.dateMatched && $('roundDate')?.value) {
+          errors.push({name: p.name, msg: `⚠ No round found for ${$('roundDate').value} — showing most recent round instead (GWU ID: ${parsed.gwuId})`});
+        }
         // Overwrite gross store for SmartGolf players
         grossStore[p.name] = parsed.gross;
         // Handle tee
@@ -866,21 +871,20 @@ async function fetchAll() {
           if (hcpIndex != null) {
             const {net, courseHcp} = grossToNet(parsed.gross, hcpIndex, 'white');
             netStore[p.name]  = net;
-            metaStore[p.name] = {chosenTeeKey:'white', detectedTeeKey:detectedKey, teeCorrected:true, hcpIndex, courseHcp};
+            metaStore[p.name] = {chosenTeeKey:'white', detectedTeeKey:detectedKey, teeCorrected:true, hcpIndex, courseHcp, gwuId:parsed.gwuId};
           } else {
             netStore[p.name]  = {};
-            metaStore[p.name] = {chosenTeeKey:'white', detectedTeeKey:detectedKey, teeCorrected:true};
+            metaStore[p.name] = {chosenTeeKey:'white', detectedTeeKey:detectedKey, teeCorrected:true, gwuId:parsed.gwuId};
           }
         } else {
-          // White tees — normal calculation
           const hcpIndex = p.hcpIndex;
           if (hcpIndex != null) {
             const {net, courseHcp} = grossToNet(parsed.gross, hcpIndex, storedKey);
             netStore[p.name]  = net;
-            metaStore[p.name] = {chosenTeeKey:storedKey, detectedTeeKey:'white', teeCorrected:false, hcpIndex, courseHcp};
+            metaStore[p.name] = {chosenTeeKey:storedKey, detectedTeeKey:'white', teeCorrected:false, hcpIndex, courseHcp, gwuId:parsed.gwuId};
           } else {
             netStore[p.name]  = {};
-            metaStore[p.name] = {chosenTeeKey:storedKey, detectedTeeKey:'white', teeCorrected:false};
+            metaStore[p.name] = {chosenTeeKey:storedKey, detectedTeeKey:'white', teeCorrected:false, gwuId:parsed.gwuId};
           }
         }
       } else {
@@ -894,7 +898,13 @@ async function fetchAll() {
   saveAll();
   renderChips();
   if (errors.length) {
-    $('statusArea').innerHTML = `<div class="status s-err">⚠ ${errors.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
+    // Separate hard errors from warnings
+    const hardErrors = errors.filter(e => !e.msg.startsWith('⚠'));
+    const warnings   = errors.filter(e =>  e.msg.startsWith('⚠'));
+    let statusHtml = '';
+    if (hardErrors.length) statusHtml += `<div class="status s-err">⛔ ${hardErrors.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
+    if (warnings.length)   statusHtml += `<div class="status s-warn">${warnings.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
+    $('statusArea').innerHTML = statusHtml;
   }
   showTeePrompts();
   renderAll();
