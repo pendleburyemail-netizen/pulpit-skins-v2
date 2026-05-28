@@ -228,11 +228,11 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
   <div class="modal">
     <div class="modal-handle"></div>
     <h3>PLAYER SETUP</h3>
-    <div class="modal-sub">Set SmartGolf ID (000000 = manual scores only), Handicap Index, and default tee for each player. HCP Index is used to calculate net scores — update when it changes.</div>
+    <div class="modal-sub">Set each player's permanent SmartGolf User ID (from their profile URL e.g. smartgolf.online/users/<strong>30685</strong>), Handicap Index, and default tee. Use <strong>000000</strong> for manual score entry.</div>
     <div class="modal-section">Player Configuration</div>
     <div class="col-hdrs">
       <div class="col-hdr">Name</div>
-      <div class="col-hdr">SG ID</div>
+      <div class="col-hdr">User ID</div>
       <div class="col-hdr">HCP Idx</div>
       <div class="col-hdr">Def. Tee</div>
     </div>
@@ -305,14 +305,14 @@ function grossToNet(grossScores, hcpIndex, teeKey) {
 // ROSTER / STATE
 // ═══════════════════════════════════════════════════════════════════════════
 const DEFAULT_ROSTER = [
-  {name:'Greg Pendlebury', id:553245, hcpIndex:null, teeKey:'white'},
-  {name:'Paul Hill',       id:553309, hcpIndex:null, teeKey:'white'},
-  {name:'Bruce Young',     id:553333, hcpIndex:null, teeKey:'white'},
-  {name:'Mohamed Hussain', id:553340, hcpIndex:null, teeKey:'white'},
-  {name:'Brett Bandula',   id:553229, hcpIndex:null, teeKey:'white'},
-  {name:'Lee Chung',       id:null,   hcpIndex:null, teeKey:'white'},
-  {name:'Murray McDonald', id:null,   hcpIndex:null, teeKey:'white'},
-  {name:'Mark Deltin',     id:null,   hcpIndex:null, teeKey:'white'},
+  {name:'Greg Pendlebury', userId:30685, id:null, hcpIndex:null, teeKey:'white'},
+  {name:'Paul Hill',       userId:null,  id:null, hcpIndex:null, teeKey:'white'},
+  {name:'Bruce Young',     userId:null,  id:null, hcpIndex:null, teeKey:'white'},
+  {name:'Mohamed Hussain', userId:null,  id:null, hcpIndex:null, teeKey:'white'},
+  {name:'Brett Bandula',   userId:null,  id:null, hcpIndex:null, teeKey:'white'},
+  {name:'Lee Chung',       userId:null,  id:null, hcpIndex:null, teeKey:'white'},
+  {name:'Murray McDonald', userId:null,  id:null, hcpIndex:null, teeKey:'white'},
+  {name:'Mark Deltin',     userId:null,  id:null, hcpIndex:null, teeKey:'white'},
 ];
 
 let roster     = JSON.parse(JSON.stringify(DEFAULT_ROSTER));
@@ -323,8 +323,8 @@ let metaStore  = {};   // name → {hcpIndex, courseHcp, teeKey, detectedTeeKey,
 let currentTab = 'scorecard';
 let teePromptQueue = [];
 
-function isManual(p) { return p.id === '000000' || p.id === 0; }
-function hasId(p)    { return p.id && !isManual(p); }
+function isManual(p) { return p.id === '000000' || p.id === 0 || p.userId === '000000'; }
+function hasId(p)    { return (p.userId || p.id) && !isManual(p); }
 
 // Persist everything
 function saveAll() {
@@ -431,14 +431,31 @@ function parseSmartGolfHTML(html) {
 // FETCH
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchOnePlayer(player) {
-  const res = await fetch(`/api/scores?id=${player.id}`);
+  const weekLabel = encodeURIComponent($('weekLabel').value || '');
+  let url;
+  if (player.userId && !isManual(player)) {
+    // Permanent user ID — proxy auto-discovers the weekly game_week_user ID
+    url = `/api/scores?userId=${player.userId}&weekLabel=${weekLabel}`;
+  } else if (player.id && !isManual(player)) {
+    // Legacy weekly game_week_user ID
+    url = `/api/scores?gwuId=${player.id}&weekLabel=${weekLabel}`;
+  } else {
+    throw new Error('No SmartGolf ID configured');
+  }
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const ct = res.headers.get('content-type') || '';
   if (ct.includes('json')) {
     const j = await res.json();
-    throw new Error(j.error || `HTTP ${res.status}`);
+    if (j.error === 'NO_GWU_ID') throw new Error('Could not find this week\'s score ID on player profile page');
+    throw new Error(j.error || j.message || `HTTP ${res.status}`);
   }
-  return parseSmartGolfHTML(await res.text());
+  // Capture the discovered GWU ID for display
+  const gwuId = res.headers.get('X-GWU-ID') || '';
+  const html  = await res.text();
+  const parsed = parseSmartGolfHTML(html);
+  parsed.gwuId = gwuId;
+  return parsed;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -498,10 +515,11 @@ function renderChips() {
     const hasGross = grossStore[p.name] && Object.keys(grossStore[p.name]).length >= 9;
     const hcpStr = p.hcpIndex != null ? ` · ${p.hcpIndex}` : '';
     const teeStr = (p.teeKey||'white') !== 'white' ? ` · ${TEES[p.teeKey]?.label}` : '';
+    const displayId = p.userId || (p.id && !isManual(p) ? p.id : null);
     let sub = '';
-    if (manual)  sub = `manual${hasGross?' ✓':''}${hcpStr}`;
-    else if(p.id) sub = `#${p.id}${hasGross?' ✓':''}${hcpStr}${teeStr}`;
-    else          sub = 'no ID';
+    if (manual)      sub = `manual${hasGross?' ✓':''}${hcpStr}`;
+    else if(displayId) sub = `#${displayId}${hasGross?' ✓':''}${hcpStr}${teeStr}`;
+    else             sub = 'no ID';
     return `<div class="chip ${on?'chip-on':'chip-off'}${manual?' chip-manual':!p.id?' chip-noid':''}"
       onclick="togglePlayer('${p.name.replace(/'/g,"\\'")}')">
       <div class="chip-dot ${on?(manual?'dot-manual':'dot-on'):'dot-off'}"></div>
@@ -891,10 +909,11 @@ function openModal() {
       `<option value="${k}" ${(p.teeKey||'white')===k?'selected':''}>${TEES[k].label}</option>`
     ).join('');
     const key = p.name.replace(/\s/g,'_');
+    const idVal = isManual(p) ? '000000' : (p.userId || p.id || '');
     return `<div class="player-setup-row">
       <span class="pname">${p.name}</span>
-      <input class="modal-inp" type="number" inputmode="numeric" placeholder="SG ID"
-        id="mid_${key}" value="${isManual(p)?'000000':p.id||''}"/>
+      <input class="modal-inp" type="number" inputmode="numeric" placeholder="User ID"
+        id="mid_${key}" value="${idVal}"/>
       <input class="modal-inp" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 14.2"
         id="mhcp_${key}" value="${p.hcpIndex!=null?p.hcpIndex:''}"/>
       <select class="modal-select" id="mtee_${key}">${teeOpts}</select>
@@ -911,15 +930,17 @@ function saveIds() {
     const teeInp = $(`mtee_${key}`);
     if (idInp) {
       const v = idInp.value.trim();
-      p.id = v==='000000'||v==='0' ? '000000' : v ? parseInt(v)||null : null;
+      if (v === '000000' || v === '0') {
+        p.userId = null; p.id = '000000';
+      } else if (v) {
+        p.userId = parseInt(v) || null; p.id = null;
+      } else {
+        p.userId = null; p.id = null;
+      }
     }
-    if (hcpInp) {
-      const v = parseFloat(hcpInp.value);
-      p.hcpIndex = isNaN(v) ? null : v;
-    }
+    if (hcpInp) { const v = parseFloat(hcpInp.value); p.hcpIndex = isNaN(v) ? null : v; }
     if (teeInp) p.teeKey = teeInp.value || 'white';
   });
-  // Recalculate net for all players with gross data
   recalcAllNet();
   saveAll();
   $('modal').style.display = 'none';
