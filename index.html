@@ -167,7 +167,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .modal h3{font-family:var(--display);font-size:22px;color:var(--gold);margin-bottom:4px}
 .modal-sub{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5}
 .modal-section{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;border-top:1px solid var(--border);padding-top:10px}
-.player-setup-row{display:grid;grid-template-columns:1fr 62px 62px 62px 80px;gap:5px;align-items:center;margin-bottom:8px}
+.player-setup-row{display:grid;grid-template-columns:1fr 72px 68px 90px;gap:6px;align-items:center;margin-bottom:8px}
 .player-setup-row .pname{font-size:11px;color:var(--text);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .modal-inp{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:7px 8px;border-radius:var(--radius);outline:none;-webkit-appearance:none;width:100%}
 .modal-inp:focus{border-color:var(--green-lit)}
@@ -176,7 +176,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .modal-acts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 .modal-acts .btn-fetch{flex:1;font-size:15px;padding:11px}
 .modal-acts .btn-sm{padding:11px 14px;font-size:14px}
-.col-hdrs{display:grid;grid-template-columns:1fr 62px 62px 62px 80px;gap:5px;margin-bottom:4px}
+.col-hdrs{display:grid;grid-template-columns:1fr 72px 68px 90px;gap:6px;margin-bottom:4px}
 .col-hdr{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:center}
 .col-hdr:first-child{text-align:left}
 .fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));right:18px;z-index:100}
@@ -230,15 +230,14 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
     <div class="modal-handle"></div>
     <h3>PLAYER SETUP</h3>
     <div class="modal-sub">
-      <strong>User ID</strong> = permanent (from smartgolf.online/users/<u>XXXXX</u>)<br/>
-      <strong>Week GWU</strong> = weekly score ID from DevTools — update each week<br/>
-      Use <strong>000000</strong> in User ID for manual entry players.
+      <strong>GC ID</strong> = Golf Canada Individual ID (permanent — from your friends list)<br/>
+      <strong>HCP Idx</strong> = auto-updated from Golf Canada on each fetch<br/>
+      Use <strong>000000</strong> in GC ID for manual score entry players.
     </div>
     <div class="modal-section">Player Configuration</div>
     <div class="col-hdrs">
       <div class="col-hdr">Name</div>
-      <div class="col-hdr">User ID</div>
-      <div class="col-hdr">Week GWU</div>
+      <div class="col-hdr">GC ID</div>
       <div class="col-hdr">HCP Idx</div>
       <div class="col-hdr">Def. Tee</div>
     </div>
@@ -330,8 +329,8 @@ let metaStore  = {};   // name → {hcpIndex, courseHcp, teeKey, detectedTeeKey,
 let currentTab = 'scorecard';
 let teePromptQueue = [];
 
-function isManual(p) { return p.id === '000000' || p.id === 0 || p.userId === '000000'; }
-function hasId(p)    { return (p.userId || p.id) && !isManual(p); }
+function isManual(p) { return p.id === '000000' || p.id === 0; }
+function hasId(p)    { return p.gcId && !isManual(p); }
 
 // Persist everything
 function saveAll() {
@@ -497,11 +496,7 @@ function fmt(n)  { return n%1===0?`$${n}`:`$${n.toFixed(2)}`; }
 function badge(n){ return n>0?`<span class="badge badge-gold">${n}</span>`:`<span class="badge badge-zero">0</span>`; }
 
 function activeFetched() {
-  // Include ALL active players who have an ID (including 000000 manual players)
-  // They show in the grid with empty inputs if no scores entered yet
-  return roster.filter(p =>
-    active.includes(p.name) && (hasId(p) || isManual(p))
-  );
+  return roster.filter(p => active.includes(p.name) && (p.gcId || isManual(p)));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -526,11 +521,11 @@ function renderChips() {
     const hasGross = grossStore[p.name] && Object.keys(grossStore[p.name]).length >= 9;
     const hcpStr = p.hcpIndex != null ? ` · ${p.hcpIndex}` : '';
     const teeStr = (p.teeKey||'white') !== 'white' ? ` · ${TEES[p.teeKey]?.label}` : '';
-    const displayId = p.weeklyGwuId ? `gwu:${p.weeklyGwuId}` : p.userId ? `u:${p.userId}` : (p.id && !isManual(p) ? p.id : null);
+    const displayId = p.gcId ? `gc:${p.gcId}` : null;
     let sub = '';
     if (manual)       sub = `manual${hasGross?' ✓':''}${hcpStr}`;
     else if(displayId) sub = `${displayId}${hasGross?' ✓':''}${hcpStr}${teeStr}`;
-    else              sub = 'no ID';
+    else              sub = 'no GC ID';
     return `<div class="chip ${on?'chip-on':'chip-off'}${manual?' chip-manual':!p.id?' chip-noid':''}"
       onclick="togglePlayer('${p.name.replace(/'/g,"\\'")}')">
       <div class="chip-dot ${on?(manual?'dot-manual':'dot-on'):'dot-off'}"></div>
@@ -587,7 +582,7 @@ function showTeePrompts() {
     const stored   = TEES[roster.find(r=>r.name===p.name)?.teeKey||'white']?.label || 'White';
     return `<div class="tee-prompt" id="tp_${idx}">
       <div class="tee-prompt-title">⚠ Non-White Tees — ${p.name}</div>
-      <div class="tee-prompt-body">SmartGolf reports <strong>${detected} Tees</strong>.<br/>
+      <div class="tee-prompt-body">Golf Canada reports <strong>${detected} Tees</strong> for this round.<br/>
       Which tee should be used to calculate net scores?</div>
       <div class="tee-prompt-btns">
         <button class="btn-use-white" onclick="resolveTee(${idx},'white')">✓ White Tees (recommended)</button>
@@ -850,98 +845,89 @@ function renderAll() {
 // FETCH ALL
 // ═══════════════════════════════════════════════════════════════════════════
 // FETCH ALL — uses Golf Canada as primary source for HCP + tee data
-// SmartGolf used for hole-by-hole gross scores
+// ═══════════════════════════════════════════════════════════════════════════
+// FETCH ALL — Golf Canada is the sole data source
+// Provides: HCP Index, tee played, hole-by-hole gross scores, date matching
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchAll() {
-  const targetDate = $('roundDate')?.value || '';
-  const activePlayers = roster.filter(p => active.includes(p.name) && (hasId(p) || p.gcId));
+  const targetDate  = $('roundDate')?.value || '';
+  const activePlayers = roster.filter(p => active.includes(p.name) && (p.gcId || isManual(p)));
 
   if (!activePlayers.length) {
-    $('statusArea').innerHTML = `<div class="status s-warn">No active players configured. Add IDs via ✏ Players.</div>`;
+    $('statusArea').innerHTML = `<div class="status s-warn">No active players with Golf Canada IDs. Add via ✏ Players.</div>`;
+    return;
+  }
+
+  if (!targetDate) {
+    $('statusArea').innerHTML = `<div class="status s-warn">Please set a round date before fetching scores.</div>`;
     return;
   }
 
   teePromptQueue = [];
   $('teePromptArea').innerHTML = '';
   renderChips();
-  $('statusArea').innerHTML = `<div class="status s-load"><div class="spinner"></div>Fetching scores from Golf Canada & SmartGolf…</div>`;
+  $('statusArea').innerHTML = `<div class="status s-load"><div class="spinner"></div>Fetching scores from Golf Canada…</div>`;
 
   const errors = [];
 
-  // ── Step 1: Fetch Golf Canada data for all players at once ────────────────
+  // Fetch all friends data from Golf Canada in one call
   let gcResults = {};
-  if (targetDate) {
-    try {
-      const gcRes = await fetch(`/api/golfcanada?action=fetchAll&targetDate=${targetDate}`);
-      if (gcRes.ok) {
-        const gcData = await gcRes.json();
-        if (gcData.results) {
-          gcData.results.forEach(r => { gcResults[r.individualId] = r; });
-        }
-      }
-    } catch(e) {
-      errors.push({name:'Golf Canada', msg:`GC fetch failed: ${e.message}`});
+  try {
+    const res = await fetch(`/api/golfcanada?action=fetchAll&targetDate=${targetDate}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (data.results) {
+      data.results.forEach(r => { gcResults[r.individualId] = r; });
     }
+  } catch(e) {
+    $('statusArea').innerHTML = `<div class="status s-err">⛔ Golf Canada fetch failed: ${e.message}</div>`;
+    return;
   }
 
-  // ── Step 2: Fetch SmartGolf hole-by-hole for players with SmartGolf IDs ──
-  const sgTargets = activePlayers.filter(p => hasId(p));
-  const sgParsed  = {};
-
-  await Promise.all(sgTargets.map(async p => {
-    try {
-      const parsed = await fetchOnePlayer(p);
-      sgParsed[p.name] = parsed;
-    } catch(e) {
-      errors.push({name: p.name, msg: `SmartGolf: ${e.message}`});
-    }
-  }));
-
-  // ── Step 3: Merge GC + SmartGolf data per player ─────────────────────────
+  // Process each active player
   activePlayers.forEach(p => {
-    const gcData = p.gcId ? gcResults[p.gcId] : null;
-    const sgData = sgParsed[p.name];
+    if (isManual(p)) return; // manual players keep their grid-entered scores
 
-    // Get HCP index from Golf Canada (most authoritative)
-    const hcpIndex = gcData?.handicap ? parseFloat(gcData.handicap) : p.hcpIndex;
-    
-    // Get tee from Golf Canada round data
-    const gcTee      = gcData?.round?.tee?.toLowerCase() || null;
-    const detectedKey = gcTee ? detectTeeKey(gcTee) : 'white';
-    const storedKey   = p.teeKey || 'white';
-
-    // Update stored HCP index from Golf Canada automatically
-    if (hcpIndex != null && gcData?.handicap) {
-      p.hcpIndex = hcpIndex;
+    const gc = p.gcId ? gcResults[p.gcId] : null;
+    if (!gc) {
+      errors.push({name: p.name, msg: 'Not in Golf Canada friends list'});
+      return;
     }
 
-    // Get gross scores from SmartGolf
-    let gross = sgData?.gross || {};
+    // Update HCP Index from Golf Canada (authoritative, always current)
+    const hcpIndex = gc.handicap ? parseFloat(gc.handicap) : p.hcpIndex;
+    if (hcpIndex != null) p.hcpIndex = hcpIndex;
 
-    // Also check Golf Canada hole data if SmartGolf failed
-    if (Object.keys(gross).length < 9 && gcData?.holeData) {
-      gross = parseGcHoleData(gcData.holeData);
+    if (!gc.found) {
+      errors.push({name: p.name, msg: `⚠ No round found for ${targetDate}. Last played: ${gc.recentDates?.[0]?.date || 'unknown'}`});
+      return;
     }
 
-    if (Object.keys(gross).length < 9) {
-      if (!sgData && !gcData?.found) {
-        errors.push({name: p.name, msg: `No round found for ${targetDate || 'latest'}`});
-      }
+    const gross      = gc.grossScores || {};
+    const holesFound = Object.keys(gross).length;
+
+    if (holesFound < 9) {
+      errors.push({name: p.name, msg: `Only ${holesFound} holes found from Golf Canada`});
       grossStore[p.name] = gross;
       netStore[p.name]   = {};
-      metaStore[p.name]  = {hcpIndex, courseHcp:null, chosenTeeKey:storedKey, detectedTeeKey:detectedKey};
+      metaStore[p.name]  = {hcpIndex, courseHcp:null, chosenTeeKey:'white', detectedTeeKey:'white'};
       return;
     }
 
     // Store gross scores
     grossStore[p.name] = gross;
 
-    // Handle tee mismatch — if GC says non-white tee, prompt user
-    const chosenTeeKey = detectedKey;
+    // Detect tee from Golf Canada round
+    const gcTee      = gc.round?.tee?.toLowerCase() || 'white';
+    const detectedKey = detectTeeKey(gcTee);
+    const storedKey   = p.teeKey || 'white';
+
     if (detectedKey !== 'white') {
+      // Queue tee prompt — default to White
       teePromptQueue.push({name: p.name, detectedTeeKey: detectedKey});
       if (hcpIndex != null) {
-        const {net, courseHcp} = grossToNet(gross, hcpIndex, 'white'); // default to white
+        const {net, courseHcp} = grossToNet(gross, hcpIndex, 'white');
         netStore[p.name]  = net;
         metaStore[p.name] = {chosenTeeKey:'white', detectedTeeKey, teeCorrected:true, hcpIndex, courseHcp};
       } else {
@@ -964,30 +950,16 @@ async function fetchAll() {
   renderChips();
 
   if (errors.length) {
-    const hardErrors = errors.filter(e => !e.msg.startsWith('⚠'));
-    const warnings   = errors.filter(e =>  e.msg.startsWith('⚠'));
-    let statusHtml = '';
-    if (hardErrors.length) statusHtml += `<div class="status s-err">⛔ ${hardErrors.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
-    if (warnings.length)   statusHtml += `<div class="status s-warn">${warnings.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
-    $('statusArea').innerHTML = statusHtml;
+    const hard = errors.filter(e => !e.msg.startsWith('⚠'));
+    const warn = errors.filter(e =>  e.msg.startsWith('⚠'));
+    let html = '';
+    if (hard.length) html += `<div class="status s-err">⛔ ${hard.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
+    if (warn.length) html += `<div class="status s-warn">${warn.map(e=>`<strong>${e.name}:</strong> ${e.msg}`).join('<br/>')}</div>`;
+    $('statusArea').innerHTML = html;
   }
 
   showTeePrompts();
   renderAll();
-}
-
-// Parse Golf Canada hole-by-hole data into our gross score format
-function parseGcHoleData(holeData) {
-  const gross = {};
-  if (!holeData || !Array.isArray(holeData.holes)) return gross;
-  holeData.holes.forEach(h => {
-    if (h.holeNumber >= 1 && h.holeNumber <= 18 && h.adjustedGrossScore != null) {
-      gross[h.holeNumber] = h.adjustedGrossScore;
-    } else if (h.holeNumber >= 1 && h.holeNumber <= 18 && h.grossScore != null) {
-      gross[h.holeNumber] = h.grossScore;
-    }
-  });
-  return gross;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1000,15 +972,12 @@ function openModal() {
     const teeOpts = TEE_KEYS.map(k =>
       `<option value="${k}" ${(p.teeKey||'white')===k?'selected':''}>${TEES[k].label}</option>`
     ).join('');
-    const key    = p.name.replace(/\s/g,'_');
-    const idVal  = isManual(p) ? '000000' : (p.userId || '');
-    const gwuVal = p.weeklyGwuId || '';
+    const key   = p.name.replace(/\s/g,'_');
+    const gcVal = isManual(p) ? '000000' : (p.gcId || '');
     return `<div class="player-setup-row">
       <span class="pname">${p.name}</span>
-      <input class="modal-inp" type="number" inputmode="numeric" placeholder="User ID"
-        id="mid_${key}" value="${idVal}" style="font-size:11px"/>
-      <input class="modal-inp" type="number" inputmode="numeric" placeholder="This week"
-        id="mgwu_${key}" value="${gwuVal}" style="font-size:11px;border-color:${gwuVal?'var(--green-lit)':'var(--border)'}"/>
+      <input class="modal-inp" type="number" inputmode="numeric" placeholder="GC ID"
+        id="mgc_${key}" value="${gcVal}" style="font-size:11px"/>
       <input class="modal-inp" type="number" step="0.1" inputmode="decimal" placeholder="HCP"
         id="mhcp_${key}" value="${p.hcpIndex!=null?p.hcpIndex:''}" style="font-size:11px"/>
       <select class="modal-select" id="mtee_${key}" style="font-size:11px">${teeOpts}</select>
@@ -1019,24 +988,19 @@ function openModal() {
 
 function saveIds() {
   roster.forEach(p => {
-    const key     = p.name.replace(/\s/g,'_');
-    const idInp   = $(`mid_${key}`);
-    const gwuInp  = $(`mgwu_${key}`);
-    const hcpInp  = $(`mhcp_${key}`);
-    const teeInp  = $(`mtee_${key}`);
-    if (idInp) {
-      const v = idInp.value.trim();
+    const key    = p.name.replace(/\s/g,'_');
+    const gcInp  = $(`mgc_${key}`);
+    const hcpInp = $(`mhcp_${key}`);
+    const teeInp = $(`mtee_${key}`);
+    if (gcInp) {
+      const v = gcInp.value.trim();
       if (v === '000000' || v === '0') {
-        p.userId = null; p.id = '000000';
+        p.gcId = null; p.id = '000000';
       } else if (v) {
-        p.userId = parseInt(v) || null; p.id = null;
+        p.gcId = parseInt(v) || null; p.id = null;
       } else {
-        p.userId = null; p.id = null;
+        p.gcId = null; p.id = null;
       }
-    }
-    if (gwuInp) {
-      const v = gwuInp.value.trim();
-      p.weeklyGwuId = v ? parseInt(v) || null : null;
     }
     if (hcpInp) { const v = parseFloat(hcpInp.value); p.hcpIndex = isNaN(v) ? null : v; }
     if (teeInp) p.teeKey = teeInp.value || 'white';
