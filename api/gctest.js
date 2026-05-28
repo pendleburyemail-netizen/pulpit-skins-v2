@@ -53,9 +53,17 @@ export default async function handler(req, res) {
 
   try {
     const token   = await getToken();
-    const friends = await get(token, `/api/members/${MY_MEMBER_ID}/getFriends`);
+    const [friends, gregProfile] = await Promise.all([
+      get(token, `/api/members/${MY_MEMBER_ID}/getFriends`),
+      get(token, `/api/scores/getProfile?individualId=${MY_MEMBER_ID}`),
+    ]);
 
-    const results = await Promise.all(friends.map(async friend => {
+    const allPlayers = [
+      { individualId: parseInt(MY_MEMBER_ID), name: gregProfile.name || 'Greg Pendlebury', handicap: gregProfile.handicap },
+      ...friends,
+    ];
+
+    const results = await Promise.all(allPlayers.map(async friend => {
       try {
         // Get score history
         const history = await get(token,
