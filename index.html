@@ -213,6 +213,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
   <button class="btn btn-sm"     id="btnCalc" title="Recalculate net scores from current gross scores">CALC NET</button>
   <button class="btn btn-sm btn-danger" id="btnClear" title="Clear all gross scores">CLEAR ALL</button>
   <button class="btn btn-sm"     id="btnEditIds">✏ PLAYERS</button>
+  <button class="btn btn-sm"     id="btnReset" title="Reset roster to defaults (clears saved IDs)">↺ RESET IDS</button>
 </div>
 
 <div class="tee-prompt-area" id="teePromptArea"></div>
@@ -906,9 +907,12 @@ async function fetchAll() {
       return;
     }
 
-    // Update HCP Index from Golf Canada (authoritative, always current)
+    // Update HCP Index from Golf Canada — only if no scores stored yet for this player
+    // This locks the index to the value at time of first fetch, preventing drift if
+    // the app is re-run days later after the index has been updated by Golf Canada
     const hcpIndex = gc.handicap ? parseFloat(gc.handicap) : p.hcpIndex;
-    if (hcpIndex != null) p.hcpIndex = hcpIndex;
+    const hasExistingScores = Object.keys(grossStore[p.name] || {}).length >= 9;
+    if (hcpIndex != null && !hasExistingScores) p.hcpIndex = hcpIndex;
 
     if (!gc.found) {
       errors.push({name: p.name, msg: `⚠ No round found for ${targetDate}. Last played: ${gc.recentDates?.[0]?.date || 'unknown'}`});
@@ -1038,6 +1042,24 @@ function clearAllScores() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// RESET ROSTER — wipes saved player IDs and reloads from hardcoded defaults
+// ═══════════════════════════════════════════════════════════════════════════
+function resetRoster() {
+  if (!confirm('Reset all player GC IDs to defaults? Scores are kept, but saved roster changes will be lost.')) return;
+  localStorage.removeItem('skins_roster');
+  roster = JSON.parse(JSON.stringify(DEFAULT_ROSTER));
+  active = roster.filter(p => p.gcId || isManual(p)).map(p => p.name);
+  // Re-apply any stored HCP indexes from metaStore into fresh roster
+  roster.forEach(p => {
+    const meta = metaStore[p.name];
+    if (meta && meta.hcpIndex != null) p.hcpIndex = meta.hcpIndex;
+  });
+  saveAll();
+  renderChips(); renderAll();
+  $('statusArea').innerHTML = `<div class="status s-ok">✓ Roster reset to defaults — GC IDs restored.</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // CALC NET (manual trigger)
 // ═══════════════════════════════════════════════════════════════════════════
 function calcAllNet() {
@@ -1059,6 +1081,7 @@ renderAll();
 $('btnFetch').addEventListener('click', fetchAll);
 $('btnCalc').addEventListener('click', calcAllNet);
 $('btnClear').addEventListener('click', clearAllScores);
+$('btnReset').addEventListener('click', resetRoster);
 $('btnEditIds').addEventListener('click', openModal);
 $('btnEditIds2').addEventListener('click', openModal);
 $('btnSaveIds').addEventListener('click', saveIds);
