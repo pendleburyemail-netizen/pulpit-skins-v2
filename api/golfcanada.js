@@ -135,36 +135,14 @@ export default async function handler(req, res) {
             };
           }
 
-          // Fetch hole-by-hole scores
-          let grossScores = {};
-          let holeDataError = null;
-          try {
-            const holeData = await gcGet(token,
-              `/api/scores/getScoreData?individualId=${friend.individualId}&scoreId=${round.id}`
-            );
-            grossScores = extractGrossScores(holeData?.score?.holeScores);
-          } catch(e) {
-            holeDataError = e.message;
-          }
-
+          // Return round info without hole data — hole data fetched separately below
           return {
             individualId: friend.individualId,
             name:         friend.name,
             handicap:     friend.handicap,
             found:        true,
-            round: {
-              id:           round.id,
-              date:         round.date?.slice(0,10),
-              course:       round.course,
-              tee:          round.tee,
-              score:        round.score,
-              rating:       round.rating,
-              slope:        round.slope,
-              differential: round.differential,
-            },
-            grossScores,
-            holesFound:     Object.keys(grossScores).length,
-            holeDataError,
+            round,
+            needsHoleData: true,
           };
         } catch(e) {
           return {
@@ -176,6 +154,35 @@ export default async function handler(req, res) {
           };
         }
       }));
+
+      // Fetch hole-by-hole data sequentially for matched players to avoid timeout
+      for (const result of results) {
+        if (!result.needsHoleData) continue;
+        let grossScores = {};
+        let holeDataError = null;
+        try {
+          const holeData = await gcGet(token,
+            `/api/scores/getScoreData?individualId=${result.individualId}&scoreId=${result.round.id}`
+          );
+          grossScores = extractGrossScores(holeData?.score?.holeScores);
+        } catch(e) {
+          holeDataError = e.message;
+        }
+        delete result.needsHoleData;
+        result.grossScores  = grossScores;
+        result.holesFound   = Object.keys(grossScores).length;
+        result.holeDataError = holeDataError;
+        result.round = {
+          id:           result.round.id,
+          date:         result.round.date?.slice(0,10),
+          course:       result.round.course,
+          tee:          result.round.tee,
+          score:        result.round.score,
+          rating:       result.round.rating,
+          slope:        result.round.slope,
+          differential: result.round.differential,
+        };
+      }
 
       return res.status(200).json({ targetDate:target, memberCount:allPlayers.length, results });
     }
