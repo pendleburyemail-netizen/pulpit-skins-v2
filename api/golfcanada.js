@@ -136,12 +136,21 @@ export default async function handler(req, res) {
           }
 
           // Return round info without hole data — hole data fetched separately below
+          // Strip to minimal fields only — raw round object contains full facility/tee data (huge)
           return {
             individualId: friend.individualId,
             name:         friend.name,
             handicap:     friend.handicap,
             found:        true,
-            round,
+            round: {
+              id:    round.id,
+              date:  round.date?.slice(0,10),
+              course:round.course,
+              tee:   round.tee,
+              score: round.score,
+              rating:round.rating,
+              slope: round.slope,
+            },
             needsHoleData: true,
           };
         } catch(e) {
@@ -164,6 +173,7 @@ export default async function handler(req, res) {
           const holeData = await gcGet(token,
             `/api/scores/getScoreData?individualId=${result.individualId}&scoreId=${result.round.id}`
           );
+          // Extract only holeScores — the response also contains full facility/tee data we don't need
           grossScores = extractGrossScores(holeData?.score?.holeScores);
         } catch(e) {
           holeDataError = e.message;
@@ -173,14 +183,13 @@ export default async function handler(req, res) {
         result.holesFound   = Object.keys(grossScores).length;
         result.holeDataError = holeDataError;
         result.round = {
-          id:           result.round.id,
-          date:         result.round.date?.slice(0,10),
-          course:       result.round.course,
-          tee:          result.round.tee,
-          score:        result.round.score,
-          rating:       result.round.rating,
-          slope:        result.round.slope,
-          differential: result.round.differential,
+          id:     result.round.id,
+          date:   result.round.date,
+          course: result.round.course,
+          tee:    result.round.tee,
+          score:  result.round.score,
+          rating: result.round.rating,
+          slope:  result.round.slope,
         };
       }
 
