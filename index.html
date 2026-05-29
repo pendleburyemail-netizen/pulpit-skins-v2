@@ -527,10 +527,10 @@ function renderChips() {
     if (manual)       sub = `manual${hasGross?' ✓':''}${hcpStr}`;
     else if(displayId) sub = `${displayId}${hasGross?' ✓':''}${hcpStr}${teeStr}`;
     else              sub = 'no GC ID';
-    return `<div class="chip ${on?'chip-on':'chip-off'}${manual?' chip-manual':!p.id?' chip-noid':''}"
+    return `<div class="chip ${on?'chip-on':'chip-off'}${manual?' chip-manual':!p.gcId?' chip-noid':''}"
       onclick="togglePlayer('${p.name.replace(/'/g,"\\'")}')">
       <div class="chip-dot ${on?(manual?'dot-manual':'dot-on'):'dot-off'}"></div>
-      ${p.name.split(' ')[0]}<span class="${p.id?'chip-sub':'chip-sub-err'}"> ${sub}</span>
+      ${p.name.split(' ')[0]}<span class="${p.gcId?'chip-sub':'chip-sub-err'}"> ${sub}</span>
     </div>`;
   }).join('');
 }
@@ -634,7 +634,7 @@ function renderScorecard() {
   const weekLbl = $('weekLabel').value;
   const {holes, skinCount} = calcSkins(players);
   const totalSkins = holes.filter(h => h.winner).length;
-  const potPlayers = active.filter(n => roster.find(p => p.name===n&&(p.id||isManual(p)))).length;
+  const potPlayers = active.filter(n => roster.find(p => p.name===n&&(p.gcId||isManual(p)))).length;
   const totalPot   = potPlayers * wager;
   const perSkin    = totalSkins > 0 ? totalPot / totalSkins : 0;
 
@@ -799,7 +799,7 @@ function renderPayout() {
   const wager = parseFloat($('wager').value) || 20;
   const {holes, skinCount} = calcSkins(players);
   const totalSkins = holes.filter(h=>h.winner).length;
-  const potPlayers = active.filter(n=>roster.find(p=>p.name===n&&(p.id||isManual(p)))).length;
+  const potPlayers = active.filter(n=>roster.find(p=>p.name===n&&(p.gcId||isManual(p)))).length;
   const totalPot   = potPlayers * wager;
   const perSkin    = totalSkins>0 ? totalPot/totalSkins : 0;
 
@@ -1040,7 +1040,7 @@ function calcAllNet() {
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
 loadAll();
-active = roster.filter(p => p.id || isManual(p)).map(p => p.name);
+active = roster.filter(p => p.gcId || isManual(p)).map(p => p.name);
 // Restore net scores from saved gross
 recalcAllNet();
 renderChips();
