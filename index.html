@@ -214,6 +214,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
   <button class="btn btn-sm btn-danger" id="btnClear" title="Clear all gross scores">CLEAR ALL</button>
   <button class="btn btn-sm"     id="btnEditIds">✏ PLAYERS</button>
   <button class="btn btn-sm"     id="btnReset" title="Reset roster to defaults (clears saved IDs)">↺ RESET IDS</button>
+  <button class="btn btn-sm"     id="btnResults" title="Download results as HTML">⬇ RESULTS</button>
 </div>
 
 <div class="tee-prompt-area" id="teePromptArea"></div>
@@ -1042,7 +1043,190 @@ function clearAllScores() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// RESET ROSTER — wipes saved player IDs and reloads from hardcoded defaults
+// GENERATE RESULTS — downloads a static HTML file with scorecard, grid, payouts
+// ═══════════════════════════════════════════════════════════════════════════
+function generateResults() {
+  const players    = activeFetched();
+  if (!players.length) { alert('No players with scores to export.'); return; }
+
+  const wager      = parseFloat($('wager').value) || 20;
+  const weekLbl    = $('weekLabel').value || '';
+  const roundDate  = $('roundDate')?.value || '';
+  const {holes, skinCount} = calcSkins(players);
+  const totalSkins = holes.filter(h => h.winner).length;
+  const potPlayers = active.filter(n => {
+    const p = roster.find(p => p.name===n&&(p.gcId||isManual(p)));
+    if (!p) return false;
+    return Object.keys(grossStore[n]||{}).length >= 9;
+  }).length;
+  const totalPot = potPlayers * wager;
+  const perSkin  = totalSkins > 0 ? totalPot / totalSkins : 0;
+  const H = Array.from({length:18},(_,i)=>i+1);
+
+  const fmtC = n => n%1===0?`$${n}`:`$${n.toFixed(2)}`;
+
+  // ── SCORECARD TABLE ──────────────────────────────────────────────────────
+  const scRows = players.map(p => {
+    const gross = grossStore[p.name] || {};
+    const net   = netStore[p.name]   || {};
+    const meta  = metaStore[p.name]  || {};
+    const skins = skinCount[p.name]  || 0;
+    const hcpStr = p.hcpIndex  != null ? p.hcpIndex.toFixed(1) : '–';
+    const chStr  = meta.courseHcp != null ? meta.courseHcp : '–';
+    const grossTot = H.reduce((s,h)=>(gross[h]!=null?s+gross[h]:s),0)||'–';
+    const netTot   = H.reduce((s,h)=>(net[h]  !=null?s+net[h]  :s),0)||'–';
+    const grossCells = H.map(h=>`<td>${gross[h]??'–'}</td>`).join('');
+    const netCells   = H.map(h=>{
+      const score=net[h]; const hd=holes[h-1];
+      if(score==null) return `<td>–</td>`;
+      const win=hd.winner===p.name, tie=hd.tied&&hd.scores.some(s=>s.name===p.name&&s.score===hd.min);
+      return `<td class="${win?'win':tie?'tie':''}">${score}</td>`;
+    }).join('');
+    return `
+      <tr class="gross-row">
+        <td class="pname">${p.name}</td>
+        <td>${hcpStr}</td><td>${chStr}</td><td>${skins}★</td><td>${grossTot}</td>
+        ${grossCells}
+      </tr>
+      <tr class="net-row">
+        <td class="pname" style="color:#666;font-size:11px">NET</td>
+        <td></td><td></td><td></td><td>${netTot}</td>
+        ${netCells}
+      </tr>`;
+  }).join('');
+
+  const winRow = holes.map(h=>
+    h.winner?`<td class="win">${h.winner.split(' ')[1]||h.winner}</td>`:
+    h.tied?`<td class="tie">TIE</td>`:`<td>–</td>`
+  ).join('');
+
+  // ── GRID TABLE ───────────────────────────────────────────────────────────
+  const gridRows = players.map(p => {
+    const net   = netStore[p.name]  || {};
+    const skins = skinCount[p.name] || 0;
+    const cells = H.map(h=>{
+      const score=net[h]; const hd=holes[h-1];
+      if(score==null) return `<td>–</td>`;
+      const win=hd.winner===p.name, tie=hd.tied&&hd.scores.some(s=>s.name===p.name&&s.score===hd.min);
+      return `<td class="${win?'win':tie?'tie':'loss'}">${score}</td>`;
+    }).join('');
+    return `<tr><td class="pname">${p.name} (${skins}★)</td>${cells}</tr>`;
+  }).join('');
+
+  // ── PAYOUT TABLE ─────────────────────────────────────────────────────────
+  const payRows = [...players]
+    .sort((a,b)=>(skinCount[b.name]||0)-(skinCount[a.name]||0))
+    .map(p => {
+      const skins   = skinCount[p.name] || 0;
+      const payout  = skins * perSkin;
+      const meta    = metaStore[p.name] || {};
+      const hcpStr  = p.hcpIndex       != null ? p.hcpIndex.toFixed(1) : '–';
+      const chStr   = meta.courseHcp   != null ? meta.courseHcp        : '–';
+      const grossTot = H.reduce((s,h)=>(grossStore[p.name]?.[h]!=null?s+grossStore[p.name][h]:s),0)||'–';
+      const netTot   = H.reduce((s,h)=>(netStore[p.name]?.[h]!=null?s+netStore[p.name][h]:s),0)||'–';
+      const skinHoles = holes.filter(h=>h.winner===p.name).map(h=>`H${h.hole}`).join(', ') || '—';
+      return `<tr class="${skins>0?'winner':''}">
+        <td class="pname">${p.name}</td>
+        <td>${hcpStr}</td><td>${chStr}</td>
+        <td>${grossTot}</td><td>${netTot}</td>
+        <td>${skins}</td><td>${skinHoles}</td>
+        <td class="payout">${skins>0?fmtC(payout):'–'}</td>
+      </tr>`;
+    }).join('');
+
+  // ── BUILD HTML ───────────────────────────────────────────────────────────
+  const holeHdrs = H.map(h=>`<th>H${h}</th>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pulpit Club Skins — ${weekLbl}</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background:#f5f5f5; color:#222; padding:16px; font-size:13px; }
+  h1   { font-size:20px; color:#1a3a1e; margin-bottom:4px; }
+  h2   { font-size:14px; font-weight:600; color:#235e2a; text-transform:uppercase;
+         letter-spacing:1px; margin:24px 0 8px; border-bottom:2px solid #235e2a; padding-bottom:4px; }
+  .meta { color:#666; font-size:12px; margin-bottom:16px; }
+  .summary { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .s-card  { background:#fff; border:1px solid #ddd; border-radius:8px; padding:10px 16px; min-width:120px; }
+  .s-lbl   { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#888; }
+  .s-val   { font-size:22px; font-weight:700; color:#235e2a; }
+  .s-unit  { font-size:11px; color:#888; }
+  .scroll  { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:8px; }
+  table    { border-collapse:collapse; min-width:100%; font-size:11px; }
+  th       { background:#235e2a; color:#fff; padding:5px 6px; text-align:center;
+             white-space:nowrap; font-weight:600; }
+  td       { padding:4px 6px; text-align:center; border-bottom:1px solid #eee;
+             white-space:nowrap; }
+  .pname   { text-align:left; font-weight:600; min-width:110px; }
+  .gross-row td { background:#f9f9f9; }
+  .net-row   td { background:#fff; font-size:11px; color:#444; }
+  .win  { background:#d4edda !important; color:#155724; font-weight:700; }
+  .tie  { background:#fff3cd !important; color:#856404; font-weight:600; }
+  .loss { background:#f8f9fa; color:#444; }
+  .winner td { background:#fffbea; }
+  .payout    { font-weight:700; color:#235e2a; font-size:13px; }
+  .win-row td { background:#e8f5e9; font-size:10px; }
+  @media print {
+    body { padding:0; background:#fff; }
+    h2   { margin-top:16px; }
+    .scroll { overflow:visible; }
+  }
+</style>
+</head>
+<body>
+<h1>⛳ Pulpit Club Skins</h1>
+<div class="meta">${weekLbl}${roundDate?' · '+roundDate:''} · ${potPlayers} players · ${fmtC(wager)} wager</div>
+
+<div class="summary">
+  <div class="s-card"><div class="s-lbl">Total Pot</div><div class="s-val">${fmtC(totalPot)}</div><div class="s-unit">${fmtC(wager)} × ${potPlayers} players</div></div>
+  <div class="s-card"><div class="s-lbl">Skins Won</div><div class="s-val">${totalSkins}</div><div class="s-unit">of 18 holes</div></div>
+  <div class="s-card"><div class="s-lbl">Per Skin</div><div class="s-val">${fmtC(perSkin)}</div><div class="s-unit">${totalSkins} skins</div></div>
+</div>
+
+<h2>💰 Payouts</h2>
+<div class="scroll"><table>
+  <thead><tr><th class="pname">Player</th><th>HCP</th><th>CH</th><th>Gross</th><th>Net</th><th>Skins</th><th>Holes Won</th><th>Payout</th></tr></thead>
+  <tbody>${payRows}</tbody>
+</table></div>
+
+<h2>📋 Scorecard</h2>
+<div class="scroll"><table>
+  <thead><tr><th class="pname">Player</th><th>HCP</th><th>CH</th><th>★</th><th>Tot</th>${holeHdrs}</tr></thead>
+  <tbody>
+    ${scRows}
+    <tr class="win-row"><td class="pname">SKIN WINNER</td><td></td><td></td><td></td><td></td>${winRow}</tr>
+  </tbody>
+</table></div>
+
+<h2>🔥 Net Score Grid</h2>
+<div class="scroll"><table>
+  <thead><tr><th class="pname">Player</th>${holeHdrs}</tr></thead>
+  <tbody>
+    ${gridRows}
+    <tr class="win-row"><td class="pname">WINNER</td>${winRow}</tr>
+  </tbody>
+</table></div>
+
+<div style="margin-top:24px;font-size:10px;color:#aaa;text-align:center">
+  Generated by Pulpit Club Skins · ${new Date().toLocaleString()}
+</div>
+</body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `PulpitSkins_${(weekLbl||roundDate||'results').replace(/\s+/g,'_')}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+
 // ═══════════════════════════════════════════════════════════════════════════
 function resetRoster() {
   if (!confirm('Reset all player GC IDs to defaults? Scores are kept, but saved roster changes will be lost.')) return;
@@ -1082,6 +1266,7 @@ $('btnFetch').addEventListener('click', fetchAll);
 $('btnCalc').addEventListener('click', calcAllNet);
 $('btnClear').addEventListener('click', clearAllScores);
 $('btnReset').addEventListener('click', resetRoster);
+$('btnResults').addEventListener('click', generateResults);
 $('btnEditIds').addEventListener('click', openModal);
 $('btnEditIds2').addEventListener('click', openModal);
 $('btnSaveIds').addEventListener('click', saveIds);
