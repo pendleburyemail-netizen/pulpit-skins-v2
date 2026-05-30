@@ -598,29 +598,34 @@ function renderStatus(players) {
 // TEE PROMPTS
 // ═══════════════════════════════════════════════════════════════════════════
 function showTeePrompts() {
-  const area = $('teePromptArea');
   const pending = teePromptQueue.filter(p => p);
-  if (!pending.length) { area.innerHTML = ''; return; }
-  area.innerHTML = pending.map((p, idx) => {
-    const detected = TEES[p.detectedTeeKey]?.label || p.detectedTeeKey;
-    const stored   = TEES[roster.find(r=>r.name===p.name)?.teeKey||'white']?.label || 'White';
-    return `<div class="tee-prompt" id="tp_${idx}">
-      <div class="tee-prompt-title">⚠ Non-White Tees — ${p.name}</div>
-      <div class="tee-prompt-body">Golf Canada reports <strong>${detected} Tees</strong> for this round.<br/>
-      Which tee should be used to calculate net scores?</div>
-      <div class="tee-prompt-btns">
-        <button class="btn-use-white" onclick="resolveTee(${idx},'white')">✓ White Tees (recommended)</button>
-        <button class="btn-keep-tee"  onclick="resolveTee(${idx},'${p.detectedTeeKey}')">Keep ${detected} Tees</button>
+  if (!pending.length) { renderAll(); return; }
+
+  // Show as blocking modal — can't be missed
+  const p        = pending[0];
+  const idx      = teePromptQueue.indexOf(p);
+  const detected = TEES[p.detectedTeeKey]?.label || p.detectedTeeKey;
+
+  $('teePromptArea').innerHTML = `
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--surface);border-radius:14px;padding:24px;max-width:360px;width:100%;box-shadow:0 8px 40px #000a">
+        <div style="font-size:16px;font-weight:700;color:var(--gold-lit);margin-bottom:12px">⚠ Tee Check — ${p.name}</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:20px">
+          Golf Canada shows <strong style="color:var(--white)">${detected} Tees</strong> for this round.<br/><br/>
+          This is often a data entry error. Which tee should be used to calculate net scores?
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button onclick="resolveTee(${idx},'white')" style="background:var(--green-lit);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer">✓ White Tees (recommended)</button>
+          <button onclick="resolveTee(${idx},'${p.detectedTeeKey}')" style="background:var(--surface);color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:13px;font-size:13px;cursor:pointer">Use ${detected} Tees</button>
+        </div>
       </div>
     </div>`;
-  }).join('');
 }
 
 window.resolveTee = function(idx, chosenTeeKey) {
   const prompt = teePromptQueue[idx];
   if (!prompt) return;
   teePromptQueue[idx] = null;
-  // Update gross store (already set) — recalc net with chosen tee
   const player    = roster.find(p => p.name === prompt.name);
   const hcpIndex  = player?.hcpIndex;
   const gross     = grossStore[prompt.name] || {};
@@ -634,9 +639,15 @@ window.resolveTee = function(idx, chosenTeeKey) {
       hcpIndex, courseHcp,
     };
   }
-  $(`tp_${idx}`)?.remove();
-  if (!$('teePromptArea').children.length) $('teePromptArea').innerHTML = '';
-  saveAll(); renderAll();
+  saveAll();
+  // Show next prompt or clear and render
+  const remaining = teePromptQueue.filter(p => p);
+  if (remaining.length) {
+    showTeePrompts();
+  } else {
+    $('teePromptArea').innerHTML = '';
+    renderAll();
+  }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1191,7 +1202,7 @@ async function fetchAll() {
     const storedKey   = p.teeKey || 'white';
 
     if (detectedKey !== 'white') {
-      // Queue tee prompt — default to White
+      // Non-white tee detected — queue a prompt since GC data entry errors are common
       teePromptQueue.push({name: p.name, detectedTeeKey: detectedKey});
       if (hcpIndex != null) {
         const {net, courseHcp} = grossToNet(gross, hcpIndex, 'white');
@@ -1226,7 +1237,7 @@ async function fetchAll() {
   }
 
   showTeePrompts();
-  renderAll();
+  if (!teePromptQueue.filter(p=>p).length) renderAll();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
