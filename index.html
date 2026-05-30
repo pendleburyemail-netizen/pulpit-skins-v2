@@ -1139,6 +1139,11 @@ async function fetchAll() {
     if (data.results) {
       data.results.forEach(r => { gcResults[r.individualId] = r; });
     }
+    // Show brief fetch summary in status
+    const found = data.results?.filter(r=>r.found).length || 0;
+    const total = data.results?.length || 0;
+    $('statusArea').innerHTML = `<div class="status s-load"><div class="spinner"></div>Got ${found}/${total} rounds for ${data.targetDate}. Processing…</div>`;
+
   } catch(e) {
     $('statusArea').innerHTML = `<div class="status s-err">⛔ Golf Canada fetch failed: ${e.message}</div>`;
     return;
