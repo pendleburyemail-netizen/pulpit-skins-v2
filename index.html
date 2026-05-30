@@ -1295,6 +1295,7 @@ function clearAllScores() {
 // GENERATE RESULTS — downloads a static HTML file with scorecard, grid, payouts
 // ═══════════════════════════════════════════════════════════════════════════
 function generateResults() {
+  try {
   const players    = activeFetched();
   if (!players.length) { alert('No players with scores to export.'); return; }
 
@@ -1382,6 +1383,50 @@ function generateResults() {
         <td class="payout">${skins>0?fmtC(payout):'–'}</td>
       </tr>`;
     }).join('');
+
+  // ── SANDBAGGER REPORT ────────────────────────────────────────────────────
+  const season2 = loadSeason();
+  const fmtNet2 = n => (n >= 0 ? '+$' : '-$') + Math.abs(n).toFixed(2).replace(/\.00$/, '');
+  let sandbaggerSection = '';
+  if (season2.weeks.length) {
+    const totals = {};
+    season2.weeks.forEach(w => {
+      w.players.forEach(p => {
+        if (!totals[p.name]) totals[p.name] = {paid:0, skins:0, won:0};
+        totals[p.name].paid  += p.paid;
+        totals[p.name].skins += p.skins;
+        totals[p.name].won   += p.won;
+      });
+    });
+    const sbAllPlayers = [...new Set(season2.weeks.flatMap(w=>w.players.map(p=>p.name)))].sort();
+    const sbTotalWeeks = season2.weeks.length;
+    const sbGrandPot   = Object.values(totals).reduce((s,t)=>s+t.paid,0);
+    const sbGrandSkins = Object.values(totals).reduce((s,t)=>s+t.skins,0);
+    const sbWeekHdrs    = season2.weeks.map(w=>`<th colspan="2">${w.label||w.date}</th>`).join('');
+    const sbWeekSubHdrs = season2.weeks.map(()=>`<th>★</th><th>Won</th>`).join('');
+    const sbRows = sbAllPlayers.map(name => {
+      const t   = totals[name] || {paid:0,skins:0,won:0};
+      const net = Math.round((t.won - t.paid)*100)/100;
+      const netStyle = net >= 0 ? 'color:#155724;font-weight:700' : 'color:#721c24;font-weight:700';
+      const wkCells = season2.weeks.map(w => {
+        const wp = w.players.find(p=>p.name===name);
+        if (!wp) return `<td style="color:#bbb">—</td><td style="color:#bbb">—</td>`;
+        const sk = wp.skins > 0 ? `<td style="color:#856404;font-weight:700">${wp.skins}★</td>` : `<td style="color:#aaa">0</td>`;
+        const wn = wp.won  > 0 ? `<td style="color:#155724;font-weight:600">$${wp.won%1===0?wp.won:wp.won.toFixed(2)}</td>` : `<td style="color:#aaa">—</td>`;
+        return sk + wn;
+      }).join('');
+      return `<tr><td class="pname">${name}</td>${wkCells}<td style="font-weight:700;color:#856404">${t.skins}</td><td style="color:#555">$${t.paid%1===0?t.paid:t.paid.toFixed(2)}</td><td style="color:#155724;font-weight:600">$${t.won%1===0?t.won:t.won.toFixed(2)}</td><td style="${netStyle}">${fmtNet2(net)}</td></tr>`;
+    }).join('');
+    sandbaggerSection = `<h2>🏆 Sandbagger Report — Season to Date</h2>
+<p style="font-size:11px;color:#666;margin-bottom:8px">${sbTotalWeeks} week${sbTotalWeeks>1?'s':''} · $${sbGrandPot} total pot · ${sbGrandSkins} total skins</p>
+<div class="scroll"><table>
+  <thead>
+    <tr><th class="pname" rowspan="2">Player</th>${sbWeekHdrs}<th colspan="4" style="background:#1a3a1e">Season Totals</th></tr>
+    <tr>${sbWeekSubHdrs}<th style="background:#1a3a1e">Skins</th><th style="background:#1a3a1e">Paid In</th><th style="background:#1a3a1e">Won</th><th style="background:#1a3a1e">Net</th></tr>
+  </thead>
+  <tbody>${sbRows}</tbody>
+</table></div>`;
+  }
 
   // ── BUILD HTML ───────────────────────────────────────────────────────────
   const holeHdrs = H.map(h=>`<th>H${h}</th>`).join('');
@@ -1475,6 +1520,10 @@ ${sandbaggerSection}
   a.download = `PulpitSkins_${(weekLbl||roundDate||'results').replace(/\s+/g,'_')}.html`;
   a.click();
   URL.revokeObjectURL(url);
+  } catch(err) {
+    alert('Results error: ' + err.message);
+    console.error(err);
+  }
 }
 
 
