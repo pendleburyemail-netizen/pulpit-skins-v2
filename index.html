@@ -1196,31 +1196,16 @@ async function fetchAll() {
     // Store gross scores
     grossStore[p.name] = gross;
 
-    // Detect tee from Golf Canada round
-    const gcTee      = gc.round?.tee?.toLowerCase() || 'white';
-    const detectedKey = detectTeeKey(gcTee);
-    const storedKey   = p.teeKey || 'white';
-
-    if (detectedKey !== 'white') {
-      // Non-white tee detected — queue a prompt since GC data entry errors are common
-      teePromptQueue.push({name: p.name, detectedTeeKey: detectedKey});
-      if (hcpIndex != null) {
-        const {net, courseHcp} = grossToNet(gross, hcpIndex, 'white');
-        netStore[p.name]  = net;
-        metaStore[p.name] = {chosenTeeKey:'white', detectedTeeKey, teeCorrected:true, hcpIndex, courseHcp};
-      } else {
-        netStore[p.name]  = {};
-        metaStore[p.name] = {chosenTeeKey:'white', detectedTeeKey, teeCorrected:true, hcpIndex:null, courseHcp:null};
-      }
+    // Always calculate net on White tees — GC data entry errors are common
+    // (players can override via ✏ Players if they genuinely played a different tee)
+    const chosenTeeKey = storedKey || 'white';
+    if (hcpIndex != null) {
+      const {net, courseHcp} = grossToNet(gross, hcpIndex, chosenTeeKey);
+      netStore[p.name]  = net;
+      metaStore[p.name] = {chosenTeeKey, detectedTeeKey: detectTeeKey(gc.round?.tee?.toLowerCase()||'white'), teeCorrected:false, hcpIndex, courseHcp};
     } else {
-      if (hcpIndex != null) {
-        const {net, courseHcp} = grossToNet(gross, hcpIndex, storedKey);
-        netStore[p.name]  = net;
-        metaStore[p.name] = {chosenTeeKey:storedKey, detectedTeeKey:'white', teeCorrected:false, hcpIndex, courseHcp};
-      } else {
-        netStore[p.name]  = {};
-        metaStore[p.name] = {chosenTeeKey:storedKey, detectedTeeKey:'white', teeCorrected:false, hcpIndex:null, courseHcp:null};
-      }
+      netStore[p.name]  = {};
+      metaStore[p.name] = {chosenTeeKey, detectedTeeKey:'white', teeCorrected:false, hcpIndex:null, courseHcp:null};
     }
   });
 
@@ -1236,8 +1221,7 @@ async function fetchAll() {
     $('statusArea').innerHTML = html;
   }
 
-  showTeePrompts();
-  if (!teePromptQueue.filter(p=>p).length) renderAll();
+  renderAll();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
