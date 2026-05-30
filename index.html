@@ -1198,7 +1198,7 @@ async function fetchAll() {
 
     // Always calculate net on White tees — GC data entry errors are common
     // (players can override via ✏ Players if they genuinely played a different tee)
-    const chosenTeeKey = storedKey || 'white';
+    const chosenTeeKey = p.teeKey || 'white';
     if (hcpIndex != null) {
       const {net, courseHcp} = grossToNet(gross, hcpIndex, chosenTeeKey);
       netStore[p.name]  = net;
