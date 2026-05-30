@@ -951,14 +951,16 @@ function saveSeason(season) {
 }
 
 function commitWeek() {
-  const players = activeFetched();
+  const allActive  = activeFetched();
+  // Only players with 18 holes of gross scores count for this week
+  const players    = allActive.filter(p => Object.keys(grossStore[p.name]||{}).length >= 9);
   if (!players.length) { alert('No players with scores to commit.'); return; }
   const wager      = parseFloat($('wager').value) || 20;
   const weekLbl    = $('weekLabel').value || 'Unknown Week';
   const roundDate  = $('roundDate')?.value || '';
   const {holes, skinCount} = calcSkins(players);
   const totalSkins = holes.filter(h => h.winner).length;
-  const potPlayers = players.filter(p => Object.keys(grossStore[p.name]||{}).length >= 9);
+  const potPlayers = players; // already filtered to those with >= 9 holes
   const totalPot   = potPlayers.length * wager;
   const perSkin    = totalSkins > 0 ? totalPot / totalSkins : 0;
 
