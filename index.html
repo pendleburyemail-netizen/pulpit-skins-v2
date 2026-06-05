@@ -704,7 +704,7 @@ function renderScorecard() {
       });
     });
     const allPlayers = [...new Set(season.weeks.flatMap(w=>w.players.map(p=>p.name)))]
-      .sort((a,b) => (totals[b]?.won||0) - (totals[a]?.won||0));
+      .sort((a,b) => ((totals[b]?.won||0)-(totals[b]?.paid||0)) - ((totals[a]?.won||0)-(totals[a]?.paid||0)));
     const totalWeeks = season.weeks.length;
     const grandPot   = Object.values(totals).reduce((s,t)=>s+t.paid,0);
     const grandSkins = Object.values(totals).reduce((s,t)=>s+t.skins,0);
@@ -1033,7 +1033,7 @@ function renderSandbagger() {
 
   // All players ever seen
   const allPlayers = [...new Set(season.weeks.flatMap(w=>w.players.map(p=>p.name)))]
-      .sort((a,b) => (totals[b]?.won||0) - (totals[a]?.won||0));
+      .sort((a,b) => ((totals[b]?.won||0)-(totals[b]?.paid||0)) - ((totals[a]?.won||0)-(totals[a]?.paid||0)));
 
   const rows = allPlayers.map(name => {
     const t   = totals[name] || {paid:0,skins:0,won:0,weeks:0};
@@ -1403,7 +1403,7 @@ function generateResults() {
       });
     });
     const sbAllPlayers = [...new Set(season2.weeks.flatMap(w=>w.players.map(p=>p.name)))]
-      .sort((a,b) => (totals[b]?.won||0) - (totals[a]?.won||0));
+      .sort((a,b) => ((totals[b]?.won||0)-(totals[b]?.paid||0)) - ((totals[a]?.won||0)-(totals[a]?.paid||0)));
     const sbTotalWeeks = season2.weeks.length;
     const sbGrandPot   = Object.values(totals).reduce((s,t)=>s+t.paid,0);
     const sbGrandSkins = Object.values(totals).reduce((s,t)=>s+t.skins,0);
