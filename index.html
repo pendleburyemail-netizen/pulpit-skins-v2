@@ -212,6 +212,10 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 <div class="ctrl-bar">
   <input class="week-input" id="weekLabel" value="Week 2 – May 27, 2026" placeholder="Week label"/>
   <input class="week-input" id="roundDate" type="date" value="2026-05-27" style="max-width:150px" title="Round date — used to find correct week's scores"/>
+  <select id="courseSelect" style="background:var(--card);border:1px solid var(--border);color:var(--text);font-size:13px;padding:7px 8px;border-radius:var(--radius);outline:none">
+    <option value="paintbrush">🖌 Paintbrush</option>
+    <option value="pulpit">⛪ Pulpit</option>
+  </select>
   <span class="ctrl-label">$</span>
   <input class="wager-inp" id="wager" type="number" value="20" min="1"/>
 </div>
@@ -269,36 +273,89 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 // ═══════════════════════════════════════════════════════════════════════════
 // COURSE DATA
 // ═══════════════════════════════════════════════════════════════════════════
-const WHITE_TEES = {
-  key:'white', label:'White', rating:68.6, slope:131, par:72,
-  holes:[
-    {hole:1, par:4,si:4 },{hole:2, par:5,si:10},{hole:3, par:4,si:18},
-    {hole:4, par:3,si:16},{hole:5, par:4,si:8 },{hole:6, par:4,si:2 },
-    {hole:7, par:3,si:14},{hole:8, par:5,si:6 },{hole:9, par:4,si:12},
-    {hole:10,par:4,si:11},{hole:11,par:5,si:13},{hole:12,par:4,si:3 },
-    {hole:13,par:3,si:1 },{hole:14,par:5,si:15},{hole:15,par:4,si:7 },
-    {hole:16,par:3,si:17},{hole:17,par:4,si:9 },{hole:18,par:4,si:5 },
-  ]
+const COURSES = {
+  paintbrush: {
+    key: 'paintbrush',
+    label: 'Paintbrush',
+    gcName: 'paintbrush',
+    tees: {
+      white:     {key:'white',     label:'White',      rating:68.6, slope:131, par:72},
+      black:     {key:'black',     label:'Black',      rating:72.3, slope:148, par:72},
+      blackblue: {key:'blackblue', label:'Black/Blue', rating:73.6, slope:147, par:72},
+      bluewhite: {key:'bluewhite', label:'Blue/White', rating:69.4, slope:137, par:72},
+      blue:      {key:'blue',      label:'Blue',       rating:70.7, slope:139, par:72},
+      yellow:    {key:'yellow',    label:'Yellow',     rating:67.1, slope:127, par:72},
+      red:       {key:'red',       label:'Red',        rating:64.8, slope:116, par:72},
+      green:     {key:'green',     label:'Green',      rating:60.8, slope:109, par:72},
+    },
+    holes: [
+      {hole:1, par:4,si:4 },{hole:2, par:5,si:10},{hole:3, par:4,si:18},
+      {hole:4, par:3,si:16},{hole:5, par:4,si:8 },{hole:6, par:4,si:2 },
+      {hole:7, par:3,si:14},{hole:8, par:5,si:6 },{hole:9, par:4,si:12},
+      {hole:10,par:4,si:11},{hole:11,par:5,si:13},{hole:12,par:4,si:3 },
+      {hole:13,par:3,si:1 },{hole:14,par:5,si:15},{hole:15,par:4,si:7 },
+      {hole:16,par:3,si:17},{hole:17,par:4,si:9 },{hole:18,par:4,si:5 },
+    ],
+  },
+  pulpit: {
+    key: 'pulpit',
+    label: 'Pulpit',
+    gcName: 'pulpit',
+    tees: {
+      white:     {key:'white',     label:'White',      rating:70.2, slope:136, par:72},
+      black:     {key:'black',     label:'Black',      rating:75.3, slope:149, par:72},
+      blackblue: {key:'blackblue', label:'Black/Blue', rating:73.6, slope:147, par:72},
+      bluewhite: {key:'bluewhite', label:'Blue/White', rating:71.1, slope:140, par:72},
+      blue:      {key:'blue',      label:'Blue',       rating:72.8, slope:144, par:72},
+      yellow:    {key:'yellow',    label:'Yellow',     rating:67.9, slope:130, par:72},
+      red:       {key:'red',       label:'Red',        rating:65.2, slope:123, par:72},
+      green:     {key:'green',     label:'Green',      rating:60.0, slope:110, par:72},
+    },
+    holes: [
+      {hole:1, par:4,si:4 },{hole:2, par:4,si:16},{hole:3, par:3,si:14},
+      {hole:4, par:4,si:2 },{hole:5, par:4,si:10},{hole:6, par:4,si:8 },
+      {hole:7, par:3,si:18},{hole:8, par:5,si:12},{hole:9, par:4,si:6 },
+      {hole:10,par:4,si:7 },{hole:11,par:4,si:9 },{hole:12,par:4,si:11},
+      {hole:13,par:5,si:5 },{hole:14,par:4,si:15},{hole:15,par:4,si:1 },
+      {hole:16,par:3,si:13},{hole:17,par:4,si:3 },{hole:18,par:5,si:17},
+    ],
+  },
 };
-const TEES = {
-  white:     {key:'white',     label:'White',      rating:68.6, slope:131, par:72},
-  black:     {key:'black',     label:'Black',      rating:72.3, slope:148, par:72},
-  bluewhite: {key:'bluewhite', label:'Blue/White', rating:69.4, slope:137, par:72},
-  blue:      {key:'blue',      label:'Blue',       rating:70.7, slope:113, par:72},
-  yellow:    {key:'yellow',    label:'Yellow',     rating:67.1, slope:127, par:72},
-  red:       {key:'red',       label:'Red',        rating:64.8, slope:116, par:72},
-  green:     {key:'green',     label:'Green',      rating:60.8, slope:109, par:72},
-};
-const TEE_KEYS = Object.keys(TEES);
+
+// Active course — default Paintbrush, persisted in localStorage
+let activeCourse = 'paintbrush';
+function loadCourse() {
+  const c = localStorage.getItem('skins_course');
+  if (c && COURSES[c]) activeCourse = c;
+}
+function saveCourse() {
+  localStorage.setItem('skins_course', activeCourse);
+}
+function getCourse() { return COURSES[activeCourse]; }
+function getTees()   { return getCourse().tees; }
+function getTee(key) { return getTees()[key] || getTees().white; }
+
+// Legacy compatibility — WHITE_TEES and TEES now derived from active course
+const WHITE_TEES = COURSES.paintbrush.tees.white; // fallback only
+function getTEES() { return getTees(); }
+
+function detectCourseFromGC(courseName) {
+  if (!courseName) return null;
+  const n = courseName.toLowerCase();
+  if (n.includes('pulpit') && !n.includes('paintbrush')) return 'pulpit';
+  if (n.includes('paintbrush')) return 'paintbrush';
+  return null;
+}
 
 function detectTeeKey(hdr) {
   const h = hdr.toLowerCase();
-  if (h.includes('black'))                           return 'black';
-  if (h.includes('blue/white')||h.includes('69.4')) return 'bluewhite';
-  if (h.includes('blue')      ||h.includes('70.7')) return 'blue';
-  if (h.includes('yellow')    ||h.includes('67.1')) return 'yellow';
-  if (h.includes('red')       ||h.includes('64.8')) return 'red';
-  if (h.includes('green')     ||h.includes('60.8')) return 'green';
+  if (h.includes('black/blue')||h.includes('black blue')) return 'blackblue';
+  if (h.includes('black'))                                 return 'black';
+  if (h.includes('blue/white')||h.includes('blue white'))  return 'bluewhite';
+  if (h.includes('blue'))                                  return 'blue';
+  if (h.includes('yellow'))                                return 'yellow';
+  if (h.includes('red'))                                   return 'red';
+  if (h.includes('green'))                                 return 'green';
   return 'white';
 }
 
@@ -306,7 +363,7 @@ function detectTeeKey(hdr) {
 // HANDICAP
 // ═══════════════════════════════════════════════════════════════════════════
 function calcCourseHcp(hcpIndex, teeKey) {
-  const tee = TEES[teeKey] || TEES.white;
+  const tee = getTee(teeKey);
   return Math.round(hcpIndex * (tee.slope / 113) + (tee.rating - tee.par));
 }
 function strokesOnHole(courseHcp, si) {
@@ -315,7 +372,7 @@ function strokesOnHole(courseHcp, si) {
 function grossToNet(grossScores, hcpIndex, teeKey) {
   const ch  = calcCourseHcp(hcpIndex, teeKey);
   const net = {};
-  WHITE_TEES.holes.forEach(({hole, si}) => {
+  getCourse().holes.forEach(({hole, si}) => {
     if (grossScores[hole] != null)
       net[hole] = grossScores[hole] - strokesOnHole(ch, si);
   });
@@ -544,7 +601,7 @@ function renderChips() {
     const meta   = metaStore[p.name] || {};
     const hasGross = grossStore[p.name] && Object.keys(grossStore[p.name]).length >= 9;
     const hcpStr = p.hcpIndex != null ? ` · ${p.hcpIndex}` : '';
-    const teeStr = (p.teeKey||'white') !== 'white' ? ` · ${TEES[p.teeKey]?.label}` : '';
+    const teeStr = (p.teeKey||'white') !== 'white' ? ` · ${getTee(p.teeKey)?.label}` : '';
     const displayId = p.gcId ? `gc:${p.gcId}` : null;
     let sub = '';
     if (manual)       sub = `manual${hasGross?' ✓':''}${hcpStr}`;
@@ -604,7 +661,7 @@ function showTeePrompts() {
   // Show as blocking modal — can't be missed
   const p        = pending[0];
   const idx      = teePromptQueue.indexOf(p);
-  const detected = TEES[p.detectedTeeKey]?.label || p.detectedTeeKey;
+  const detected = getTee(p.detectedTeeKey)?.label || p.detectedTeeKey;
 
   $('teePromptArea').innerHTML = `
     <div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px">
@@ -790,7 +847,7 @@ function renderScorecard() {
         <td style="color:var(--gold-lit);font-size:10px">${chStr}</td>
         <td>${badge(skins)}</td>
         <td style="font-weight:500;color:var(--text)">${netTot||'–'}</td>
-        <td style="font-size:9px;color:var(--muted)">${TEES[meta.chosenTeeKey||player.teeKey||'white']?.label||'White'}</td>
+        <td style="font-size:9px;color:var(--muted)">${getTee(meta.chosenTeeKey||player.teeKey||'white')?.label||'White'}</td>
         ${netCells}
       </tr>`;
   }).join('');
@@ -1153,6 +1210,16 @@ async function fetchAll() {
     if (data.error) throw new Error(data.error);
     if (data.results) {
       data.results.forEach(r => { gcResults[r.individualId] = r; });
+      // Auto-detect course from first found round
+      const firstFound = data.results?.find(r => r.found && r.round?.course);
+      if (firstFound) {
+        const detected = detectCourseFromGC(firstFound.round.course);
+        if (detected && detected !== activeCourse) {
+          activeCourse = detected;
+          saveCourse();
+          $('courseSelect').value = activeCourse;
+        }
+      }
     }
     // Show brief fetch summary in status
     const found = data.results?.filter(r=>r.found).length || 0;
@@ -1236,7 +1303,7 @@ async function fetchAll() {
 function openModal() {
   $('modalRows').innerHTML = roster.map(p => {
     const teeOpts = TEE_KEYS.map(k =>
-      `<option value="${k}" ${(p.teeKey||'white')===k?'selected':''}>${TEES[k].label}</option>`
+      `<option value="${k}" ${(p.teeKey||'white')===k?'selected':''}>${getTees()[k].label}</option>`
     ).join('');
     const key   = p.name.replace(/\s/g,'_');
     const gcVal = isManual(p) ? '000000' : (p.gcId || '');
@@ -1562,6 +1629,8 @@ function calcAllNet() {
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
 loadAll();
+loadCourse();
+$('courseSelect').value = activeCourse;
 active = roster.filter(p => p.gcId || isManual(p)).map(p => p.name);
 // Restore net scores from saved gross
 recalcAllNet();
@@ -1579,11 +1648,19 @@ $('btnSaveIds').addEventListener('click', saveIds);
 $('btnCancelIds').addEventListener('click', () => $('modal').style.display='none');
 $('wager').addEventListener('change', renderAll);
 
+// Course selector
+$('courseSelect').addEventListener('change', function() {
+  activeCourse = this.value;
+  saveCourse();
+  // Recalc net with new course data
+  recalcAllNet();
+  renderAll();
+});
+
 // Auto-update week label when date changes
 $('roundDate').addEventListener('change', function() {
   const d = new Date(this.value + 'T12:00:00');
   if (isNaN(d)) return;
-  // Find which week number this is (Tuesdays = game day, count from first Tuesday of season)
   const month = d.toLocaleString('en-CA', {month:'long'});
   const day   = d.getDate();
   const year  = d.getFullYear();
