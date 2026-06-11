@@ -1302,7 +1302,7 @@ async function fetchAll() {
 // ═══════════════════════════════════════════════════════════════════════════
 function openModal() {
   $('modalRows').innerHTML = roster.map(p => {
-    const teeOpts = TEE_KEYS.map(k =>
+    const teeOpts = Object.keys(getTees()).map(k =>
       `<option value="${k}" ${(p.teeKey||'white')===k?'selected':''}>${getTees()[k].label}</option>`
     ).join('');
     const key   = p.name.replace(/\s/g,'_');
