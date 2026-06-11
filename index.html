@@ -423,10 +423,14 @@ function loadAll() {
     if (r) {
       const parsed = JSON.parse(r);
       if (Array.isArray(parsed)) {
+        // Merge DEFAULT_ROSTER with saved overrides
         roster = DEFAULT_ROSTER.map(def => {
           const saved = parsed.find(p => p.name === def.name);
           return saved ? {...def, ...saved} : def;
         });
+        // Append any extra players saved that aren't in DEFAULT_ROSTER
+        const defaultNames = new Set(DEFAULT_ROSTER.map(p => p.name));
+        parsed.filter(p => p.name && !defaultNames.has(p.name)).forEach(p => roster.push(p));
       }
     }
     const a = localStorage.getItem('skins_active');
