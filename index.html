@@ -1272,13 +1272,13 @@ async function fetchAll() {
     // Store gross scores
     grossStore[p.name] = gross;
 
-    // Always calculate net on White tees — GC data entry errors are common
-    // (players can override via ✏ Players if they genuinely played a different tee)
-    const chosenTeeKey = p.teeKey || 'white';
+    // Use tee detected from Golf Canada round data; fall back to player's configured tee
+    const detectedTeeKey = detectTeeKey(gc.round?.tee?.toLowerCase() || '');
+    const chosenTeeKey   = detectedTeeKey || p.teeKey || 'white';
     if (hcpIndex != null) {
       const {net, courseHcp} = grossToNet(gross, hcpIndex, chosenTeeKey);
       netStore[p.name]  = net;
-      metaStore[p.name] = {chosenTeeKey, detectedTeeKey: detectTeeKey(gc.round?.tee?.toLowerCase()||'white'), teeCorrected:false, hcpIndex, courseHcp};
+      metaStore[p.name] = {chosenTeeKey, detectedTeeKey: detectedTeeKey || 'white', teeCorrected:false, hcpIndex, courseHcp};
     } else {
       netStore[p.name]  = {};
       metaStore[p.name] = {chosenTeeKey, detectedTeeKey:'white', teeCorrected:false, hcpIndex:null, courseHcp:null};
