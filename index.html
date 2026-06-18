@@ -1272,9 +1272,11 @@ async function fetchAll() {
     // Store gross scores
     grossStore[p.name] = gross;
 
-    // Use tee detected from Golf Canada round data; fall back to player's configured tee
+    // Always use the tee configured in the Players modal (p.teeKey).
+    // Golf Canada tee data is ignored — it is frequently incorrect.
+    // To override for a specific round, change the tee in ✏ Players before fetching.
     const detectedTeeKey = detectTeeKey(gc.round?.tee?.toLowerCase() || '');
-    const chosenTeeKey   = detectedTeeKey || p.teeKey || 'white';
+    const chosenTeeKey   = p.teeKey || 'white';
     if (hcpIndex != null) {
       const {net, courseHcp} = grossToNet(gross, hcpIndex, chosenTeeKey);
       netStore[p.name]  = net;
