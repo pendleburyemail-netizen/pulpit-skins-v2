@@ -371,11 +371,16 @@ function strokesOnHole(courseHcp, si) {
   return Math.floor(courseHcp / 18) + (si <= (courseHcp % 18) ? 1 : 0);
 }
 function grossToNet(grossScores, hcpIndex, teeKey) {
-  const ch  = calcCourseHcp(hcpIndex, teeKey);
-  const net = {};
-  getCourse().holes.forEach(({hole, si}) => {
-    if (grossScores[hole] != null)
-      net[hole] = grossScores[hole] - strokesOnHole(ch, si);
+  const ch     = calcCourseHcp(hcpIndex, teeKey);
+  const course = getCourse();
+  const net    = {};
+  console.log('[grossToNet] course:', course.key, 'teeKey:', teeKey, 'hcpIndex:', hcpIndex, 'courseHcp:', ch);
+  course.holes.forEach(({hole, si}) => {
+    if (grossScores[hole] != null) {
+      const strokes = strokesOnHole(ch, si);
+      console.log(`  hole ${hole} si:${si} strokes:${strokes}`);
+      net[hole] = grossScores[hole] - strokes;
+    }
   });
   return {net, courseHcp: ch};
 }
