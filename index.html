@@ -73,20 +73,20 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 18px 0}
 .s-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
 .s-card-wide{grid-column:1/-1}
-.s-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.s-val{font-family:var(--display);font-size:28px;color:var(--gold);line-height:1}
+.s-lbl{font-size:9px;font-family:var(--sans);font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.s-val{font-family:var(--display);font-size:28px;color:var(--green);line-height:1}
 .s-unit{font-size:10px;color:var(--muted);margin-top:2px}
 .section{padding:16px 18px 0}
-.section-title{font-family:var(--display);font-size:18px;color:var(--green);letter-spacing:1px;margin-bottom:12px}
+.section-title{font-family:var(--display);font-size:20px;color:var(--green);letter-spacing:1px;margin-bottom:14px;border-bottom:2px solid var(--border);padding-bottom:6px}
 .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 /* ── Scorecard grid with editable gross row ── */
 .sc-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .sc-table{border-collapse:collapse;font-family:var(--mono);min-width:820px;width:100%}
-.sc-table th{background:var(--green);color:#ffffff;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:6px 4px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+.sc-table th{background:var(--green);color:#ffffff;font-size:9px;font-family:var(--sans);font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:7px 4px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
 .sc-table th.col-pin{text-align:left;padding-left:10px;position:sticky;left:0;z-index:3;background:var(--green);min-width:120px}
-.sc-table td{padding:3px 4px;text-align:center;border-bottom:1px solid var(--border);font-size:11px;font-family:var(--mono)}
-.sc-table td.col-pin{text-align:left;padding-left:10px;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--text);position:sticky;left:0;z-index:1;background:var(--surface)}
+.sc-table td{padding:4px 4px;text-align:center;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--sans)}
+.sc-table td.col-pin{text-align:left;padding-left:10px;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text);position:sticky;left:0;z-index:1;background:var(--surface)}
 /* Alternating player groups */
 .row-gross td{background:#f0f7f0}
 .row-gross td.col-pin{background:#f0f7f0}
@@ -108,8 +108,8 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .c-norm{color:var(--text)}
 .c-none{color:#1a2e1c}
 /* Row labels */
-.row-lbl-g{font-size:9px;color:#5a8a5e;letter-spacing:1px}
-.row-lbl-n{font-size:9px;color:var(--muted);letter-spacing:1px}
+.row-lbl-g{font-size:9px;font-family:var(--sans);font-weight:600;color:#5a8a5e}
+.row-lbl-n{font-size:9px;font-family:var(--sans);font-weight:600;color:var(--muted)}
 /* Winner summary row */
 .row-winner td{background:var(--surface)!important;font-size:9px;color:var(--muted);border-top:2px solid var(--border);padding:4px}
 .row-winner td.col-pin{background:var(--surface)!important;font-size:8px;letter-spacing:1px}
@@ -118,10 +118,10 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 
 /* ── Grid (heatmap) tab ── */
 .tbl{border-collapse:collapse;font-family:var(--mono);width:100%}
-.tbl th{background:var(--green);color:#ffffff;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl th{background:var(--green);color:#ffffff;font-size:9px;font-family:var(--sans);font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
 .tbl th.sticky-col{text-align:left;padding-left:10px;position:sticky;left:0;z-index:2;background:var(--green);min-width:120px}
-.tbl td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);font-size:11px}
-.tbl td.sticky-col{text-align:left;padding-left:10px;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text);position:sticky;left:0;z-index:1;background:var(--surface);white-space:nowrap;min-width:120px}
+.tbl td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--sans)}
+.tbl td.sticky-col{text-align:left;padding-left:10px;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text);position:sticky;left:0;z-index:1;background:var(--surface);white-space:nowrap;min-width:120px}
 .tbl tbody tr:nth-child(even) td.sticky-col{background:#f0f4f0}
 .h-win{background:var(--win-bg);color:var(--win-text);border:1px solid var(--win-border);font-weight:600}
 .h-tie{background:var(--tie-bg);color:var(--tie-text);border:1px solid var(--tie-border);font-weight:500}
@@ -138,18 +138,21 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .badge-zero{background:transparent;color:var(--muted);border:1px solid var(--border)}
 
 /* ── Payout ── */
-.pay-table{border-collapse:collapse;font-family:var(--mono);font-size:12px;width:100%}
-.pay-table th{background:var(--green);color:#ffffff;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;text-align:left;border-bottom:1px solid var(--border)}
+.pay-table{border-collapse:collapse;font-family:var(--sans);font-size:13px;width:100%}
+.pay-table th{background:var(--green);color:#ffffff;font-size:9px;font-family:var(--sans);font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:7px 14px;text-align:left;border-bottom:1px solid var(--border)}
 .pay-table td{padding:11px 14px;border-bottom:1px solid var(--border)}
-.pay-name{font-family:var(--sans);font-size:13px;color:var(--text)}
-.pay-win{color:var(--gold-lit);font-weight:600;font-size:16px}
+.pay-name{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text)}
+.pay-win{color:#1b5e20;font-weight:700;font-size:15px;font-family:var(--sans)}
 .pay-zero{color:var(--muted)}
-.sb-table th{font-size:10px;padding:4px 6px}
-.sb-name{text-align:left;font-weight:600;min-width:110px;font-size:11px}
-.sb-skins{color:#8a6a00;font-weight:700;font-size:11px}
-.sb-won{color:#1b5e20;font-weight:600;font-size:11px}
-.sb-zero{color:var(--muted);font-size:11px}
-.sb-absent{color:#bbb;font-size:11px}
+.sb-table th{font-size:9px;font-family:var(--sans);font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:7px 5px}
+.sb-name{text-align:left;font-weight:600;min-width:110px;font-size:13px;font-family:var(--sans)}
+.sb-week{text-align:left;font-weight:600;font-size:13px;font-family:var(--sans);padding-left:10px;white-space:nowrap;color:var(--text);background:var(--surface);position:sticky;left:0;z-index:1;min-width:140px}
+.sb-totals-row td{background:#1e6b2e!important;color:#ffffff!important}
+.sb-totals-row .sticky-col{background:#1e6b2e!important;color:#ffffff!important;font-size:9px;letter-spacing:1px}
+.sb-skins{color:#8a6a00;font-weight:700;font-size:12px;font-family:var(--sans)}
+.sb-won{color:#1b5e20;font-weight:600;font-size:12px;font-family:var(--sans)}
+.sb-zero{color:var(--muted);font-size:12px;font-family:var(--sans)}
+.sb-absent{color:#bbb;font-size:12px;font-family:var(--sans)}
 .sb-total-skins,.sb-total-paid,.sb-total-won,.sb-net-pos,.sb-net-neg{background:#1e6b2e!important;color:#ffffff!important}
 .sb-total-skins{color:#ffd54f;font-weight:700}
 .sb-total-paid{color:#c8e6c9;font-size:11px}
@@ -772,38 +775,46 @@ function renderScorecard() {
     const totalWeeks = season.weeks.length;
     const grandPot   = Object.values(totals).reduce((s,t)=>s+t.paid,0);
     const grandSkins = Object.values(totals).reduce((s,t)=>s+t.skins,0);
-    const sbWeekHdrs    = season.weeks.map(w=>`<th colspan="2">${w.label||w.date}</th>`).join('');
-    const sbWeekSubHdrs = season.weeks.map(()=>`<th>★</th><th>Won</th>`).join('');
-    const sbRows = allPlayers.map(name => {
-      const t   = totals[name] || {paid:0,skins:0,won:0};
-      const net = Math.round((t.won - t.paid)*100)/100;
-      const netStyle = net >= 0 ? 'color:#155724;font-weight:700' : 'color:#721c24;font-weight:700';
-      const weekCells = season.weeks.map(w => {
+
+    // FLIPPED: players across top, weeks as rows
+    const playerHdrs = allPlayers.map(n => `<th colspan="2">${n.split(' ')[0]}</th>`).join('');
+    const playerSubHdrs = allPlayers.map(() => `<th>★</th><th>$</th>`).join('');
+
+    // One row per week
+    const weekRows = season.weeks.map(w => {
+      const cells = allPlayers.map(name => {
         const wp = w.players.find(p=>p.name===name);
-        if (!wp) return `<td style="color:#bbb">—</td><td style="color:#bbb">—</td>`;
-        const sk = wp.skins > 0 ? `<td style="color:#856404;font-weight:700">${wp.skins}★</td>` : `<td style="color:#aaa">0</td>`;
-        const wn = wp.won  > 0 ? `<td style="color:#155724;font-weight:600">$${wp.won%1===0?wp.won:wp.won.toFixed(2)}</td>` : `<td style="color:#aaa">—</td>`;
+        if (!wp) return `<td class="sb-absent">—</td><td class="sb-absent">—</td>`;
+        const sk = wp.skins > 0 ? `<td class="sb-skins">${wp.skins}★</td>` : `<td class="sb-zero">0</td>`;
+        const wn = wp.won  > 0 ? `<td class="sb-won">$${wp.won%1===0?wp.won:wp.won.toFixed(2)}</td>` : `<td class="sb-zero">—</td>`;
         return sk + wn;
       }).join('');
-      const netDisplay = fmtNet(net);
-      return `<tr>
-        <td class="pname">${name}</td>
-        ${weekCells}
-        <td style="font-weight:700;color:#856404">${t.skins}</td>
-        <td style="color:#555">$${t.paid%1===0?t.paid:t.paid.toFixed(2)}</td>
-        <td style="color:#155724;font-weight:600">$${t.won%1===0?t.won:t.won.toFixed(2)}</td>
-        <td style="${netStyle}">${netDisplay}</td>
-      </tr>`;
+      return `<tr><td class="sb-week">${w.label||w.date}</td>${cells}</tr>`;
+    }).join('');
+
+    // Totals row at bottom
+    const totalCells = allPlayers.map(name => {
+      const t   = totals[name] || {paid:0,skins:0,won:0};
+      const net = Math.round((t.won - t.paid)*100)/100;
+      const netCls = net >= 0 ? 'sb-net-pos' : 'sb-net-neg';
+      const netStr = (net >= 0 ? '+$' : '-$') + Math.abs(net).toFixed(2).replace(/\.00$/,'');
+      return `<td class="sb-total-skins">${t.skins}★</td><td class="${netCls}">${netStr}</td>`;
     }).join('');
     sandbaggerSection = `
 <h2>🏆 Sandbagger Report — Season to Date</h2>
-<p style="font-size:11px;color:#666;margin-bottom:8px">${totalWeeks} week${totalWeeks>1?'s':''} · $${grandPot} total pot · ${grandSkins} total skins</p>
-<div class="scroll"><table>
+<p style="font-size:11px;color:var(--muted);margin-bottom:8px">${totalWeeks} week${totalWeeks>1?'s':''} · $${grandPot} total pot · ${grandSkins} total skins</p>
+<div class="scroll-x"><table class="tbl sb-table">
   <thead>
-    <tr><th class="pname" rowspan="2">Player</th>${sbWeekHdrs}<th colspan="4" style="background:#1e6b2e">Season Totals</th></tr>
-    <tr>${sbWeekSubHdrs}<th style="background:#1e6b2e">Skins</th><th style="background:#1e6b2e">Paid In</th><th style="background:#1e6b2e">Won</th><th style="background:#1e6b2e">Net</th></tr>
+    <tr><th class="sticky-col" rowspan="2">Week</th>${playerHdrs}</tr>
+    <tr>${playerSubHdrs}</tr>
   </thead>
-  <tbody>${sbRows}</tbody>
+  <tbody>
+    ${weekRows}
+    <tr class="sb-totals-row">
+      <td class="sticky-col" style="font-size:9px;letter-spacing:1px;font-weight:700;color:var(--green)">SEASON NET</td>
+      ${totalCells}
+    </tr>
+  </tbody>
 </table></div>`;
   }
 
@@ -1490,29 +1501,37 @@ function generateResults() {
     const sbTotalWeeks = season2.weeks.length;
     const sbGrandPot   = Object.values(totals).reduce((s,t)=>s+t.paid,0);
     const sbGrandSkins = Object.values(totals).reduce((s,t)=>s+t.skins,0);
-    const sbWeekHdrs    = season2.weeks.map(w=>`<th colspan="2">${w.label||w.date}</th>`).join('');
-    const sbWeekSubHdrs = season2.weeks.map(()=>`<th>★</th><th>Won</th>`).join('');
-    const sbRows = sbAllPlayers.map(name => {
-      const t   = totals[name] || {paid:0,skins:0,won:0};
-      const net = Math.round((t.won - t.paid)*100)/100;
-      const netStyle = net >= 0 ? 'color:#155724;font-weight:700' : 'color:#721c24;font-weight:700';
-      const wkCells = season2.weeks.map(w => {
+    // FLIPPED: players across top, weeks as rows
+    const playerHdrs2    = sbAllPlayers.map(n => `<th colspan="2">${n.split(' ')[0]}</th>`).join('');
+    const playerSubHdrs2 = sbAllPlayers.map(() => `<th>★</th><th>$</th>`).join('');
+    const weekRows2 = season2.weeks.map(w => {
+      const cells = sbAllPlayers.map(name => {
         const wp = w.players.find(p=>p.name===name);
         if (!wp) return `<td style="color:#bbb">—</td><td style="color:#bbb">—</td>`;
         const sk = wp.skins > 0 ? `<td style="color:#856404;font-weight:700">${wp.skins}★</td>` : `<td style="color:#aaa">0</td>`;
         const wn = wp.won  > 0 ? `<td style="color:#155724;font-weight:600">$${wp.won%1===0?wp.won:wp.won.toFixed(2)}</td>` : `<td style="color:#aaa">—</td>`;
         return sk + wn;
       }).join('');
-      return `<tr><td class="pname">${name}</td>${wkCells}<td style="font-weight:700;color:#856404">${t.skins}</td><td style="color:#555">$${t.paid%1===0?t.paid:t.paid.toFixed(2)}</td><td style="color:#155724;font-weight:600">$${t.won%1===0?t.won:t.won.toFixed(2)}</td><td style="${netStyle}">${fmtNet2(net)}</td></tr>`;
+      return `<tr><td class="pname">${w.label||w.date}</td>${cells}</tr>`;
+    }).join('');
+    const totalCells2 = sbAllPlayers.map(name => {
+      const t   = totals[name] || {paid:0,skins:0,won:0};
+      const net = Math.round((t.won - t.paid)*100)/100;
+      const netStyle = net >= 0 ? 'color:#a5d6a7;font-weight:700' : 'color:#ffcdd2;font-weight:700';
+      const netStr = (net >= 0 ? '+$' : '-$') + Math.abs(net).toFixed(2).replace(/\.00$/,'');
+      return `<td style="background:#1e6b2e;color:#ffd54f;font-weight:700">${t.skins}★</td><td style="background:#1e6b2e;${netStyle}">${netStr}</td>`;
     }).join('');
     sandbaggerSection = `<h2>🏆 Sandbagger Report — Season to Date</h2>
 <p style="font-size:11px;color:#666;margin-bottom:8px">${sbTotalWeeks} week${sbTotalWeeks>1?'s':''} · $${sbGrandPot} total pot · ${sbGrandSkins} total skins</p>
 <div class="scroll"><table>
   <thead>
-    <tr><th class="pname" rowspan="2">Player</th>${sbWeekHdrs}<th colspan="4" style="background:#1e6b2e">Season Totals</th></tr>
-    <tr>${sbWeekSubHdrs}<th style="background:#1e6b2e">Skins</th><th style="background:#1e6b2e">Paid In</th><th style="background:#1e6b2e">Won</th><th style="background:#1e6b2e">Net</th></tr>
+    <tr><th class="pname" rowspan="2">Week</th>${playerHdrs2}</tr>
+    <tr>${playerSubHdrs2}</tr>
   </thead>
-  <tbody>${sbRows}</tbody>
+  <tbody>
+    ${weekRows2}
+    <tr><td class="pname" style="background:#1e6b2e;color:#fff;font-size:9px;letter-spacing:1px;font-weight:700">SEASON NET</td>${totalCells2}</tr>
+  </tbody>
 </table></div>`;
   }
 
