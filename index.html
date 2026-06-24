@@ -5,29 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="theme-color" content="#0b1a0d"/>
+<meta name="theme-color" content="#f5f7f5"/>
 <title>Pulpit Club Skins</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0b1a0d;--surface:#111e13;--card:#162018;--border:#1c3020;
-  --green:#2d6a35;--green-lit:#48a855;
-  --gold:#c9a84c;--gold-lit:#e8c46a;--gold-bg:#251f05;--gold-bdr:#7a6420;
-  --text:#cce3ce;--muted:#4d6e51;
-  --red:#c0392b;--red-bg:#2a0d0d;--red-lit:#e08080;
-  --white:#edf7ee;--radius:8px;
+  --bg:#f5f7f5;--surface:#ffffff;--card:#f0f4f0;--border:#d0ddd0;
+  --green:#1e6b2e;--green-lit:#2e8b3e;
+  --gold:#8a6a00;--gold-lit:#a07a00;--gold-bg:#fdf8e1;--gold-bdr:#c9a84c;
+  --text:#1a2e1a;--muted:#5a7a5a;
+  --red:#c0392b;--red-bg:#fdf0f0;--red-lit:#c0392b;
+  --white:#ffffff;--radius:8px;
   --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--display:'Bebas Neue',sans-serif;
-  --win-bg:#2a3a00;--win-text:#b8e04a;--win-border:#5a8a00;
-  --tie-bg:#0d1e3a;--tie-text:#64b5f6;--tie-border:#1565c0;
+  --win-bg:#e8f5e9;--win-text:#1b5e20;--win-border:#4caf50;
+  --tie-bg:#e3f2fd;--tie-text:#0d47a1;--tie-border:#1565c0;
+  --loss-bg:#f9f9f9;--loss-text:#9e9e9e;--loss-border:#e0e0e0;
+}
   --loss-bg:#181818;--loss-text:#3a4a3c;--loss-border:#222;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
 body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
-.hdr{background:linear-gradient(160deg,#091508 0%,#142018 100%);border-bottom:1px solid var(--border);padding:16px 18px 14px;position:relative;overflow:hidden}
+.hdr{background:linear-gradient(160deg,#1a4a22 0%,#2e7a3e 100%);border-bottom:1px solid var(--border);padding:16px 18px 14px;position:relative;overflow:hidden}
 .hdr::after{content:'⛳';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:60px;opacity:.07;pointer-events:none}
-.hdr-sub{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:2px}
-.hdr-title{font-family:var(--display);font-size:32px;color:var(--gold);letter-spacing:2px;line-height:1}
+.hdr-sub{font-size:9px;color:rgba(255,255,255,0.7);letter-spacing:3px;text-transform:uppercase;margin-bottom:2px}
+.hdr-title{font-family:var(--display);font-size:32px;color:#ffffff;letter-spacing:2px;line-height:1}
 .tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border)}
 .tab{flex:1;padding:11px 4px;text-align:center;font-family:var(--display);font-size:14px;letter-spacing:1px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .18s;-webkit-tap-highlight-color:transparent}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
@@ -40,7 +42,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .roster-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:20px;font-size:12px;font-family:var(--mono);border:1px solid;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .15s}
-.chip-on{background:#182e1a;border-color:var(--green-lit);color:var(--text)}
+.chip-on{background:#e8f5e9;border-color:var(--green-lit);color:var(--text)}
 .chip-off{background:var(--card);border-color:var(--border);color:var(--muted)}
 .chip-manual{border-style:dashed;border-color:#5a6e5a}
 .chip-noid{border-style:dashed}
@@ -53,7 +55,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .chip-sub-err{font-size:10px;color:var(--red)}
 .action-bar{display:flex;gap:8px;padding:10px 18px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
 .btn{font-family:var(--display);letter-spacing:1px;border:none;cursor:pointer;border-radius:var(--radius);transition:all .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.btn-fetch{padding:9px 20px;font-size:17px;background:linear-gradient(135deg,#235e2a 0%,var(--green-lit) 100%);color:#fff;box-shadow:0 2px 10px #2d6a3540;flex:1}
+.btn-fetch{padding:9px 20px;font-size:17px;background:linear-gradient(135deg,#235e2a 0%,var(--green-lit) 100%);color:#fff;box-shadow:0 2px 10px #1e6b2e30;flex:1}
 .btn-fetch:active{filter:brightness(.9);transform:scale(.98)}
 .btn-fetch:disabled{opacity:.35;cursor:not-allowed;transform:none;filter:none}
 .btn-sm{padding:8px 14px;font-size:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--display);letter-spacing:1px}
@@ -61,11 +63,11 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .btn-danger{border-color:var(--red);color:var(--red-lit)}
 .status-area{padding:0 18px}
 .status{margin:10px 0;padding:10px 14px;border-radius:var(--radius);font-family:var(--mono);font-size:11px;display:flex;align-items:flex-start;gap:8px;line-height:1.6}
-.s-load{background:#0d2a10;border:1px solid var(--green);color:var(--green-lit)}
+.s-load{background:#e8f5e9;border:1px solid var(--green);color:#1b5e20}
 .s-err{background:var(--red-bg);border:1px solid var(--red);color:var(--red-lit)}
-.s-warn{background:#221e05;border:1px solid var(--gold-bdr);color:var(--gold-lit)}
-.s-ok{background:#0d2a10;border:1px solid var(--green);color:var(--green-lit)}
-.s-info{background:#0d1e2a;border:1px solid #1e3a50;color:#70b0d8}
+.s-warn{background:#fffde7;border:1px solid var(--gold-bdr);color:#5d4037}
+.s-ok{background:#e8f5e9;border:1px solid var(--green);color:#1b5e20}
+.s-info{background:#e3f2fd;border:1px solid #90caf9;color:#0d47a1}
 .spinner{width:13px;height:13px;border:2px solid var(--green-lit);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;margin-top:1px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 18px 0}
@@ -83,11 +85,11 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .sc-table{border-collapse:collapse;font-family:var(--mono);min-width:820px;width:100%}
 .sc-table th{background:var(--surface);color:var(--muted);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:6px 4px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
 .sc-table th.col-pin{text-align:left;padding-left:10px;position:sticky;left:0;z-index:3;background:var(--surface);min-width:120px}
-.sc-table td{padding:3px 4px;text-align:center;border-bottom:1px solid #131e14;font-size:11px;font-family:var(--mono)}
+.sc-table td{padding:3px 4px;text-align:center;border-bottom:1px solid var(--border);font-size:11px;font-family:var(--mono)}
 .sc-table td.col-pin{text-align:left;padding-left:10px;font-family:var(--sans);font-size:11px;font-weight:500;color:var(--white);position:sticky;left:0;z-index:1;background:var(--card)}
 /* Alternating player groups */
-.row-gross td{background:#0f1e11}
-.row-gross td.col-pin{background:#0f1e11}
+.row-gross td{background:#f0f7f0}
+.row-gross td.col-pin{background:#f0f7f0}
 .row-net   td{background:var(--card);border-bottom:2px solid #1a2e1c}
 .row-net   td.col-pin{background:var(--card)}
 /* Gross input cell */
@@ -97,7 +99,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
   outline:none;padding:4px 2px;-webkit-appearance:none;
   -moz-appearance:textfield;
 }
-.gross-input:focus{border-bottom-color:var(--green-lit);color:var(--white);background:#0d2a10}
+.gross-input:focus{border-bottom-color:var(--green-lit);color:var(--text);background:#e8f5e9}
 .gross-input::-webkit-inner-spin-button,.gross-input::-webkit-outer-spin-button{-webkit-appearance:none}
 /* Net score cells */
 .c-win{background:var(--gold-bg)!important;color:var(--gold-lit)!important;font-weight:600}
@@ -118,9 +120,9 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .tbl{border-collapse:collapse;font-family:var(--mono);width:100%}
 .tbl th{background:var(--surface);color:var(--muted);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
 .tbl th.sticky-col{text-align:left;padding-left:10px;position:sticky;left:0;z-index:2;background:var(--surface);min-width:120px}
-.tbl td{padding:7px 5px;text-align:center;border-bottom:1px solid #131e14;font-size:11px}
+.tbl td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);font-size:11px}
 .tbl td.sticky-col{text-align:left;padding-left:10px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--white);position:sticky;left:0;z-index:1;background:var(--card);white-space:nowrap;min-width:120px}
-.tbl tbody tr:nth-child(even) td.sticky-col{background:#111e13}
+.tbl tbody tr:nth-child(even) td.sticky-col{background:#f8faf8}
 .h-win{background:var(--win-bg);color:var(--win-text);border:1px solid var(--win-border);font-weight:600}
 .h-tie{background:var(--tie-bg);color:var(--tie-text);border:1px solid var(--tie-border);font-weight:500}
 .h-loss{background:var(--loss-bg);color:var(--loss-text);border:1px solid var(--loss-border)}
@@ -138,8 +140,8 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 /* ── Payout ── */
 .pay-table{border-collapse:collapse;font-family:var(--mono);font-size:12px;width:100%}
 .pay-table th{background:var(--surface);color:var(--muted);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;text-align:left;border-bottom:1px solid var(--border)}
-.pay-table td{padding:11px 14px;border-bottom:1px solid #131e14}
-.pay-name{font-family:var(--sans);font-size:13px;color:var(--white)}
+.pay-table td{padding:11px 14px;border-bottom:1px solid var(--border)}
+.pay-name{font-family:var(--sans);font-size:13px;color:var(--text)}
 .pay-win{color:var(--gold-lit);font-weight:600;font-size:16px}
 .pay-zero{color:var(--muted)}
 .sb-table th{font-size:10px;padding:4px 6px}
@@ -148,7 +150,7 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .sb-won{color:#7fcf8e;font-weight:600;font-size:11px}
 .sb-zero{color:var(--muted);font-size:11px}
 .sb-absent{color:#555;font-size:11px}
-.sb-total-skins,.sb-total-paid,.sb-total-won,.sb-net-pos,.sb-net-neg{background:#1a3a1e!important}
+.sb-total-skins,.sb-total-paid,.sb-total-won,.sb-net-pos,.sb-net-neg{background:#1e6b2e!important}
 .sb-total-skins{color:#f0c040;font-weight:700}
 .sb-total-paid{color:#aaa;font-size:11px}
 .sb-total-won{color:#7fcf8e;font-weight:600}
@@ -371,16 +373,11 @@ function strokesOnHole(courseHcp, si) {
   return Math.floor(courseHcp / 18) + (si <= (courseHcp % 18) ? 1 : 0);
 }
 function grossToNet(grossScores, hcpIndex, teeKey) {
-  const ch     = calcCourseHcp(hcpIndex, teeKey);
-  const course = getCourse();
-  const net    = {};
-  console.log('[grossToNet] course:', course.key, 'teeKey:', teeKey, 'hcpIndex:', hcpIndex, 'courseHcp:', ch);
-  course.holes.forEach(({hole, si}) => {
-    if (grossScores[hole] != null) {
-      const strokes = strokesOnHole(ch, si);
-      console.log(`  hole ${hole} si:${si} strokes:${strokes}`);
-      net[hole] = grossScores[hole] - strokes;
-    }
+  const ch  = calcCourseHcp(hcpIndex, teeKey);
+  const net = {};
+  getCourse().holes.forEach(({hole, si}) => {
+    if (grossScores[hole] != null)
+      net[hole] = grossScores[hole] - strokesOnHole(ch, si);
   });
   return {net, courseHcp: ch};
 }
@@ -803,8 +800,8 @@ function renderScorecard() {
 <p style="font-size:11px;color:#666;margin-bottom:8px">${totalWeeks} week${totalWeeks>1?'s':''} · $${grandPot} total pot · ${grandSkins} total skins</p>
 <div class="scroll"><table>
   <thead>
-    <tr><th class="pname" rowspan="2">Player</th>${sbWeekHdrs}<th colspan="4" style="background:#1a3a1e">Season Totals</th></tr>
-    <tr>${sbWeekSubHdrs}<th style="background:#1a3a1e">Skins</th><th style="background:#1a3a1e">Paid In</th><th style="background:#1a3a1e">Won</th><th style="background:#1a3a1e">Net</th></tr>
+    <tr><th class="pname" rowspan="2">Player</th>${sbWeekHdrs}<th colspan="4" style="background:#1e6b2e">Season Totals</th></tr>
+    <tr>${sbWeekSubHdrs}<th style="background:#1e6b2e">Skins</th><th style="background:#1e6b2e">Paid In</th><th style="background:#1e6b2e">Won</th><th style="background:#1e6b2e">Net</th></tr>
   </thead>
   <tbody>${sbRows}</tbody>
 </table></div>`;
@@ -999,7 +996,7 @@ function renderPayout() {
       </tbody>
     </table>
     <div style="margin-top:16px;text-align:center">
-      <button onclick="commitWeek()" style="background:linear-gradient(135deg,#1a3a1e,#235e2a);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.5px">+ ADD TO SEASON RECORD</button>
+      <button onclick="commitWeek()" style="background:linear-gradient(135deg,#1e6b2e,#2e8b3e);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.5px">+ ADD TO SEASON RECORD</button>
     </div>
     </div>`;
 }
@@ -1143,14 +1140,14 @@ function renderSandbagger() {
           <tr>
             <th class="sticky-col" rowspan="2">Player</th>
             ${weekHdrs}
-            <th colspan="4" style="background:#1a3a1e">Season Totals</th>
+            <th colspan="4" style="background:#1e6b2e">Season Totals</th>
           </tr>
           <tr>
             ${weekSubHdrs}
-            <th style="background:#1a3a1e">Skins</th>
-            <th style="background:#1a3a1e">Paid In</th>
-            <th style="background:#1a3a1e">Won</th>
-            <th style="background:#1a3a1e">Net</th>
+            <th style="background:#1e6b2e">Skins</th>
+            <th style="background:#1e6b2e">Paid In</th>
+            <th style="background:#1e6b2e">Won</th>
+            <th style="background:#1e6b2e">Net</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -1277,15 +1274,13 @@ async function fetchAll() {
     // Store gross scores
     grossStore[p.name] = gross;
 
-    // Always use the tee configured in the Players modal (p.teeKey).
-    // Golf Canada tee data is ignored — it is frequently incorrect.
-    // To override for a specific round, change the tee in ✏ Players before fetching.
-    const detectedTeeKey = detectTeeKey(gc.round?.tee?.toLowerCase() || '');
-    const chosenTeeKey   = p.teeKey || 'white';
+    // Always calculate net on White tees — GC data entry errors are common
+    // (players can override via ✏ Players if they genuinely played a different tee)
+    const chosenTeeKey = p.teeKey || 'white';
     if (hcpIndex != null) {
       const {net, courseHcp} = grossToNet(gross, hcpIndex, chosenTeeKey);
       netStore[p.name]  = net;
-      metaStore[p.name] = {chosenTeeKey, detectedTeeKey: detectedTeeKey || 'white', teeCorrected:false, hcpIndex, courseHcp};
+      metaStore[p.name] = {chosenTeeKey, detectedTeeKey: detectTeeKey(gc.round?.tee?.toLowerCase()||'white'), teeCorrected:false, hcpIndex, courseHcp};
     } else {
       netStore[p.name]  = {};
       metaStore[p.name] = {chosenTeeKey, detectedTeeKey:'white', teeCorrected:false, hcpIndex:null, courseHcp:null};
@@ -1514,8 +1509,8 @@ function generateResults() {
 <p style="font-size:11px;color:#666;margin-bottom:8px">${sbTotalWeeks} week${sbTotalWeeks>1?'s':''} · $${sbGrandPot} total pot · ${sbGrandSkins} total skins</p>
 <div class="scroll"><table>
   <thead>
-    <tr><th class="pname" rowspan="2">Player</th>${sbWeekHdrs}<th colspan="4" style="background:#1a3a1e">Season Totals</th></tr>
-    <tr>${sbWeekSubHdrs}<th style="background:#1a3a1e">Skins</th><th style="background:#1a3a1e">Paid In</th><th style="background:#1a3a1e">Won</th><th style="background:#1a3a1e">Net</th></tr>
+    <tr><th class="pname" rowspan="2">Player</th>${sbWeekHdrs}<th colspan="4" style="background:#1e6b2e">Season Totals</th></tr>
+    <tr>${sbWeekSubHdrs}<th style="background:#1e6b2e">Skins</th><th style="background:#1e6b2e">Paid In</th><th style="background:#1e6b2e">Won</th><th style="background:#1e6b2e">Net</th></tr>
   </thead>
   <tbody>${sbRows}</tbody>
 </table></div>`;
