@@ -77,20 +77,20 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .s-val{font-family:var(--display);font-size:28px;color:var(--gold);line-height:1}
 .s-unit{font-size:10px;color:var(--muted);margin-top:2px}
 .section{padding:16px 18px 0}
-.section-title{font-family:var(--display);font-size:18px;color:var(--gold);letter-spacing:1px;margin-bottom:12px}
+.section-title{font-family:var(--display);font-size:18px;color:var(--green);letter-spacing:1px;margin-bottom:12px}
 .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 /* ── Scorecard grid with editable gross row ── */
 .sc-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .sc-table{border-collapse:collapse;font-family:var(--mono);min-width:820px;width:100%}
-.sc-table th{background:var(--surface);color:var(--muted);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:6px 4px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
-.sc-table th.col-pin{text-align:left;padding-left:10px;position:sticky;left:0;z-index:3;background:var(--surface);min-width:120px}
+.sc-table th{background:var(--green);color:#ffffff;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:6px 4px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+.sc-table th.col-pin{text-align:left;padding-left:10px;position:sticky;left:0;z-index:3;background:var(--green);min-width:120px}
 .sc-table td{padding:3px 4px;text-align:center;border-bottom:1px solid var(--border);font-size:11px;font-family:var(--mono)}
-.sc-table td.col-pin{text-align:left;padding-left:10px;font-family:var(--sans);font-size:11px;font-weight:500;color:var(--white);position:sticky;left:0;z-index:1;background:var(--card)}
+.sc-table td.col-pin{text-align:left;padding-left:10px;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--text);position:sticky;left:0;z-index:1;background:var(--surface)}
 /* Alternating player groups */
 .row-gross td{background:#f0f7f0}
 .row-gross td.col-pin{background:#f0f7f0}
-.row-net   td{background:var(--card);border-bottom:2px solid #1a2e1c}
+.row-net   td{background:var(--card);border-bottom:2px solid var(--border)}
 .row-net   td.col-pin{background:var(--card)}
 /* Gross input cell */
 .gross-input{
@@ -102,9 +102,9 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 .gross-input:focus{border-bottom-color:var(--green-lit);color:var(--text);background:#e8f5e9}
 .gross-input::-webkit-inner-spin-button,.gross-input::-webkit-outer-spin-button{-webkit-appearance:none}
 /* Net score cells */
-.c-win{background:var(--gold-bg)!important;color:var(--gold-lit)!important;font-weight:600}
+.c-win{background:#e8f5e9!important;color:#1b5e20!important;font-weight:700}
 .c-win::after{content:' ★';font-size:9px}
-.c-tie{color:#3a7a45}
+.c-tie{background:#e3f2fd!important;color:#0d47a1!important;font-weight:600}
 .c-norm{color:var(--text)}
 .c-none{color:#1a2e1c}
 /* Row labels */
@@ -113,16 +113,16 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 /* Winner summary row */
 .row-winner td{background:var(--surface)!important;font-size:9px;color:var(--muted);border-top:2px solid var(--border);padding:4px}
 .row-winner td.col-pin{background:var(--surface)!important;font-size:8px;letter-spacing:1px}
-.wr-win{color:var(--gold-lit);font-weight:500}
+.wr-win{color:#1b5e20;font-weight:600}
 .wr-tie{color:var(--red-lit)}
 
 /* ── Grid (heatmap) tab ── */
 .tbl{border-collapse:collapse;font-family:var(--mono);width:100%}
-.tbl th{background:var(--surface);color:var(--muted);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
-.tbl th.sticky-col{text-align:left;padding-left:10px;position:sticky;left:0;z-index:2;background:var(--surface);min-width:120px}
+.tbl th{background:var(--green);color:#ffffff;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl th.sticky-col{text-align:left;padding-left:10px;position:sticky;left:0;z-index:2;background:var(--green);min-width:120px}
 .tbl td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);font-size:11px}
-.tbl td.sticky-col{text-align:left;padding-left:10px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--white);position:sticky;left:0;z-index:1;background:var(--card);white-space:nowrap;min-width:120px}
-.tbl tbody tr:nth-child(even) td.sticky-col{background:#f8faf8}
+.tbl td.sticky-col{text-align:left;padding-left:10px;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text);position:sticky;left:0;z-index:1;background:var(--surface);white-space:nowrap;min-width:120px}
+.tbl tbody tr:nth-child(even) td.sticky-col{background:#f0f4f0}
 .h-win{background:var(--win-bg);color:var(--win-text);border:1px solid var(--win-border);font-weight:600}
 .h-tie{background:var(--tie-bg);color:var(--tie-text);border:1px solid var(--tie-border);font-weight:500}
 .h-loss{background:var(--loss-bg);color:var(--loss-text);border:1px solid var(--loss-border)}
@@ -139,23 +139,23 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 
 /* ── Payout ── */
 .pay-table{border-collapse:collapse;font-family:var(--mono);font-size:12px;width:100%}
-.pay-table th{background:var(--surface);color:var(--muted);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;text-align:left;border-bottom:1px solid var(--border)}
+.pay-table th{background:var(--green);color:#ffffff;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;text-align:left;border-bottom:1px solid var(--border)}
 .pay-table td{padding:11px 14px;border-bottom:1px solid var(--border)}
 .pay-name{font-family:var(--sans);font-size:13px;color:var(--text)}
 .pay-win{color:var(--gold-lit);font-weight:600;font-size:16px}
 .pay-zero{color:var(--muted)}
 .sb-table th{font-size:10px;padding:4px 6px}
 .sb-name{text-align:left;font-weight:600;min-width:110px;font-size:11px}
-.sb-skins{color:#f0c040;font-weight:700;font-size:11px}
-.sb-won{color:#7fcf8e;font-weight:600;font-size:11px}
+.sb-skins{color:#8a6a00;font-weight:700;font-size:11px}
+.sb-won{color:#1b5e20;font-weight:600;font-size:11px}
 .sb-zero{color:var(--muted);font-size:11px}
-.sb-absent{color:#555;font-size:11px}
-.sb-total-skins,.sb-total-paid,.sb-total-won,.sb-net-pos,.sb-net-neg{background:#1e6b2e!important}
-.sb-total-skins{color:#f0c040;font-weight:700}
-.sb-total-paid{color:#aaa;font-size:11px}
-.sb-total-won{color:#7fcf8e;font-weight:600}
-.sb-net-pos{color:#4ade80;font-weight:700}
-.sb-net-neg{color:#f87171;font-weight:700}
+.sb-absent{color:#bbb;font-size:11px}
+.sb-total-skins,.sb-total-paid,.sb-total-won,.sb-net-pos,.sb-net-neg{background:#1e6b2e!important;color:#ffffff!important}
+.sb-total-skins{color:#ffd54f;font-weight:700}
+.sb-total-paid{color:#c8e6c9;font-size:11px}
+.sb-total-won{color:#a5d6a7;font-weight:700}
+.sb-net-pos{color:#a5d6a7!important;font-weight:700}
+.sb-net-neg{color:#ffcdd2!important;font-weight:700}
 .pay-total td{border-top:1px solid var(--border)}
 
 /* ── Tee prompt ── */
@@ -675,7 +675,7 @@ function showTeePrompts() {
       <div style="background:var(--surface);border-radius:14px;padding:24px;max-width:360px;width:100%;box-shadow:0 8px 40px #000a">
         <div style="font-size:16px;font-weight:700;color:var(--gold-lit);margin-bottom:12px">⚠ Tee Check — ${p.name}</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:20px">
-          Golf Canada shows <strong style="color:var(--white)">${detected} Tees</strong> for this round.<br/><br/>
+          Golf Canada shows <strong style="color:var(--text)">${detected} Tees</strong> for this round.<br/><br/>
           This is often a data entry error. Which tee should be used to calculate net scores?
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
