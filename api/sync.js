@@ -1,7 +1,11 @@
-// JSONBin.io sync — uses a fixed bin ID stored as JSONBIN_BIN_ID env var
-// On first push, bin ID is returned in response so you can set the env var once.
-
 const JSONBIN_URL = 'https://api.jsonbin.io/v3/b';
+
+function fetchWithTimeout(url, options = {}, ms = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,10 +18,9 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'JSONBIN_API_KEY not set' });
 
   try {
-    // GET — read current data
     if (req.method === 'GET') {
       if (!binId) return res.status(200).json({ found: false, reason: 'no bin ID yet' });
-      const r = await fetch(`${JSONBIN_URL}/${binId}/latest`, {
+      const r = await fetchWithTimeout(`${JSONBIN_URL}/${binId}/latest`, {
         headers: { 'X-Master-Key': apiKey },
       });
       if (!r.ok) return res.status(200).json({ found: false });
@@ -25,13 +28,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ found: true, data: json.record });
     }
 
-    // POST — create or update
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
 
       if (binId) {
-        // Update existing bin
-        const r = await fetch(`${JSONBIN_URL}/${binId}`, {
+        const r = await fetchWithTimeout(`${JSONBIN_URL}/${binId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -46,8 +47,7 @@ export default async function handler(req, res) {
         }
         return res.status(200).json({ ok: true, binId });
       } else {
-        // Create new bin — return the bin ID so it can be set as env var
-        const r = await fetch(JSONBIN_URL, {
+        const r = await fetchWithTimeout(JSONBIN_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -63,7 +63,6 @@ export default async function handler(req, res) {
         }
         const json = await r.json();
         const newBinId = json.metadata?.id;
-        // Return bin ID — admin must set JSONBIN_BIN_ID env var to this value
         return res.status(200).json({
           ok: true,
           binId: newBinId,
@@ -75,7 +74,8 @@ export default async function handler(req, res) {
 
     res.status(405).json({ error: 'Method not allowed' });
   } catch (e) {
-    console.error('sync error:', e.message);
-    res.status(500).json({ error: e.message });
+    const msg = e.name === 'AbortError' ? 'Request timed out — try again' : e.message;
+    console.error('sync error:', msg);
+    res.status(500).json({ error: msg });
   }
 }
