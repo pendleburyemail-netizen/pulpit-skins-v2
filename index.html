@@ -379,7 +379,7 @@ function grossToNet(grossScores, hcpIndex, teeKey) {
   const ch  = calcCourseHcp(hcpIndex, teeKey);
   const net = {};
   getCourse().holes.forEach(({hole, si}) => {
-    if (grossScores[hole] != null)
+    if (grossScores[hole] != null && grossScores[hole] !== 0)  // 0 = unplayed hole
       net[hole] = grossScores[hole] - strokesOnHole(ch, si);
   });
   return {net, courseHcp: ch};
@@ -562,11 +562,12 @@ async function fetchOnePlayer(player) {
 // SKINS CALCULATION
 // ═══════════════════════════════════════════════════════════════════════════
 function calcSkins(players) {
-  // Only score holes where at least 2 players have a net score
+  // Only score holes where at least 2 players have a valid net score.
+  // Gross score of 0 = unplayed hole (GC average substitution) — excluded from skin.
   const holes = Array.from({length:18}, (_,i) => i+1).map(h => {
     const scores = players
-      .map(p => ({name:p.name, score:netStore[p.name]?.[h] ?? null}))
-      .filter(x => x.score != null);
+      .map(p => ({name:p.name, score:netStore[p.name]?.[h] ?? null, gross:grossStore[p.name]?.[h] ?? null}))
+      .filter(x => x.score != null && x.gross !== 0);  // exclude unplayed holes
     if (scores.length < 2) return {hole:h, winner:null, tied:false, min:null, scores};
     const min     = Math.min(...scores.map(s => s.score));
     const winners = scores.filter(s => s.score === min);
