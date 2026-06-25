@@ -1,40 +1,69 @@
-import { put, get, del } from '@vercel/blob';
-
+// Vercel Blob sync using REST API directly (no npm package needed)
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
-  const BLOB_KEY = 'pulpit-skins-activeweek.json';
+  const token   = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return res.status(500).json({ error: 'BLOB_READ_WRITE_TOKEN not set' });
+
+  const FILENAME = 'pulpit-skins-activeweek.json';
+  const BASE_URL = 'https://blob.vercel-storage.com';
 
   try {
-    // GET — load shared week data
+    // GET — find and return current week data
     if (req.method === 'GET') {
-      try {
-        const existing = await get(BLOB_KEY);
-        if (!existing) return res.status(200).json({ found: false });
-        const text = await existing.text();
-        return res.status(200).json({ found: true, data: JSON.parse(text) });
-      } catch (e) {
-        return res.status(200).json({ found: false });
-      }
-    }
-
-    // POST — save shared week data
-    if (req.method === 'POST') {
-      const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-      await put(BLOB_KEY, body, {
-        access: 'public',
-        contentType: 'application/json',
-        addRandomSuffix: false,
+      // List blobs to find our file
+      const listRes = await fetch(`${BASE_URL}?prefix=pulpit-skins-activeweek`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      return res.status(200).json({ ok: true });
+      if (!listRes.ok) return res.status(200).json({ found: false });
+      const list = await listRes.json();
+      const blob = list.blobs?.find(b => b.pathname === FILENAME);
+      if (!blob) return res.status(200).json({ found: false });
+
+      const dataRes = await fetch(blob.url);
+      if (!dataRes.ok) return res.status(200).json({ found: false });
+      const data = await dataRes.json();
+      return res.status(200).json({ found: true, data });
     }
 
-    // DELETE — clear shared week data
-    if (req.method === 'DELETE') {
-      try { await del(BLOB_KEY); } catch(e) {}
+    // POST — save week data
+    if (req.method === 'POST') {
+      let body = '';
+      if (typeof req.body === 'string') {
+        body = req.body;
+      } else if (req.body) {
+        body = JSON.stringify(req.body);
+      } else {
+        // Read raw body
+        body = await new Promise((resolve, reject) => {
+          let data = '';
+          req.on('data', chunk => data += chunk);
+          req.on('end', () => resolve(data));
+          req.on('error', reject);
+        });
+      }
+
+      const putRes = await fetch(`${BASE_URL}/${FILENAME}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'x-api-version': '7',
+          'x-add-random-suffix': '0',
+          'x-cache-control-max-age': '0',
+        },
+        body,
+      });
+
+      if (!putRes.ok) {
+        const errText = await putRes.text();
+        console.error('Blob PUT error:', putRes.status, errText);
+        return res.status(500).json({ error: `Blob PUT failed: ${putRes.status}` });
+      }
+
       return res.status(200).json({ ok: true });
     }
 
