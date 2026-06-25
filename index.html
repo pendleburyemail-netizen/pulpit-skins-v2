@@ -1464,7 +1464,13 @@ async function pushToCloud() {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
-    $('statusArea').innerHTML = `<div class="status s-ok">☁ Scores pushed to cloud — other devices can now tap ⬇ Pull to sync.</div>`;
+    if (json.action === 'CREATED') {
+      $('statusArea').innerHTML = `<div class="status s-warn">⚠ Bin created! One-time setup needed:<br/>
+        Add env var <strong>JSONBIN_BIN_ID</strong> = <code>${json.binId}</code> in Vercel → Settings → Environment Variables, then redeploy.<br/>
+        After that, Push/Pull will work across all devices.</div>`;
+    } else {
+      $('statusArea').innerHTML = `<div class="status s-ok">☁ Scores pushed to cloud — other devices can now tap ⬇ Pull to sync.</div>`;
+    }
   } catch(e) {
     $('statusArea').innerHTML = `<div class="status s-err">⛔ Push failed: ${e.message}</div>`;
   } finally {
