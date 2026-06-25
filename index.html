@@ -607,7 +607,7 @@ function calcSkins(players) {
   const skinCount = {};
   players.forEach(p => { skinCount[p.name] = 0; });
   holes.forEach(h => { if (h.winner) skinCount[h.winner] = (skinCount[h.winner]||0)+1; });
-  return {holes, skinCount, minCH};
+  return {holes, skinCount, minCH, relativeNet};
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -765,7 +765,7 @@ function renderScorecard() {
 
   const wager   = parseFloat($('wager').value) || 20;
   const weekLbl = $('weekLabel').value;
-  const {holes, skinCount, minCH} = calcSkins(players);
+  const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
   const totalSkins = holes.filter(h => h.winner).length;
   const potPlayers = active.filter(n => {
     const p = roster.find(p => p.name===n&&(p.gcId||isManual(p)));
@@ -854,7 +854,7 @@ function renderScorecard() {
 
   const rows = players.map(player => {
     const gross  = grossStore[player.name] || {};
-    const net    = netStore[player.name]   || {};
+    const net    = relativeNet[player.name] || {};
     const meta   = metaStore[player.name]  || {};
     const skins  = skinCount[player.name]  || 0;
     const hcpStr = player.hcpIndex != null  ? player.hcpIndex.toFixed(1) : '–';
@@ -949,11 +949,11 @@ window.updateGross = function(playerName, hole, value) {
 function renderGrid() {
   const players = activeFetched();
   if (!players.length) { $('panel-grid').innerHTML = ''; return; }
-  const {holes, skinCount, minCH} = calcSkins(players);
+  const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
 
   const hh   = holes.map(h=>`<th style="${h.winner?'color:var(--win-text)':h.tied?'color:var(--tie-text)':''}">H${h.hole}</th>`).join('');
   const rows = players.map(p => {
-    const net   = netStore[p.name]  || {};
+    const net   = relativeNet[p.name] || {};
     const meta  = metaStore[p.name] || {};
     const skins = skinCount[p.name] || 0;
     const hcpStr = p.hcpIndex      != null ? `HCP ${p.hcpIndex.toFixed(1)}` : '';
@@ -1001,7 +1001,7 @@ function renderPayout() {
   const players = activeFetched();
   if (!players.length) { $('panel-payout').innerHTML = ''; return; }
   const wager = parseFloat($('wager').value) || 20;
-  const {holes, skinCount, minCH} = calcSkins(players);
+  const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
   const totalSkins = holes.filter(h=>h.winner).length;
   const potPlayers = active.filter(n => {
     const p = roster.find(p => p.name===n&&(p.gcId||isManual(p)));
@@ -1066,7 +1066,7 @@ function commitWeek() {
   const wager      = parseFloat($('wager').value) || 20;
   const weekLbl    = $('weekLabel').value || 'Unknown Week';
   const roundDate  = $('roundDate')?.value || '';
-  const {holes, skinCount, minCH} = calcSkins(players);
+  const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
   const totalSkins = holes.filter(h => h.winner).length;
   const potPlayers = players; // already filtered to those with >= 9 holes
   const totalPot   = potPlayers.length * wager;
@@ -1491,7 +1491,7 @@ function generateResults() {
   const wager      = parseFloat($('wager').value) || 20;
   const weekLbl    = $('weekLabel').value || '';
   const roundDate  = $('roundDate')?.value || '';
-  const {holes, skinCount, minCH} = calcSkins(players);
+  const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
   const totalSkins = holes.filter(h => h.winner).length;
   const potPlayers = active.filter(n => {
     const p = roster.find(p => p.name===n&&(p.gcId||isManual(p)));
@@ -1507,7 +1507,7 @@ function generateResults() {
   // ── SCORECARD TABLE ──────────────────────────────────────────────────────
   const scRows = players.map(p => {
     const gross = grossStore[p.name] || {};
-    const net   = netStore[p.name]   || {};
+    const net   = relativeNet[p.name] || {};
     const meta  = metaStore[p.name]  || {};
     const skins = skinCount[p.name]  || 0;
     const hcpStr = p.hcpIndex  != null ? p.hcpIndex.toFixed(1) : '–';
@@ -1541,7 +1541,7 @@ function generateResults() {
 
   // ── GRID TABLE ───────────────────────────────────────────────────────────
   const gridRows = players.map(p => {
-    const net   = netStore[p.name]  || {};
+    const net   = relativeNet[p.name] || {};
     const skins = skinCount[p.name] || 0;
     const cells = H.map(h=>{
       const score=net[h]; const hd=holes[h-1];
@@ -1562,7 +1562,7 @@ function generateResults() {
       const hcpStr  = p.hcpIndex       != null ? p.hcpIndex.toFixed(1) : '–';
       const chStr   = meta.courseHcp   != null ? (meta.courseHcp - (minCH||0)) : '–';
       const grossTot = H.reduce((s,h)=>(grossStore[p.name]?.[h]!=null?s+grossStore[p.name][h]:s),0)||'–';
-      const netTot   = H.reduce((s,h)=>(netStore[p.name]?.[h]!=null?s+netStore[p.name][h]:s),0)||'–';
+      const netTot   = H.reduce((s,h)=>(relativeNet[p.name]?.[h]!=null?s+relativeNet[p.name][h]:s),0)||'–';
       const skinHoles = holes.filter(h=>h.winner===p.name).map(h=>`H${h.hole}`).join(', ') || '—';
       return `<tr class="${skins>0?'winner':''}">
         <td class="pname">${p.name}</td>
