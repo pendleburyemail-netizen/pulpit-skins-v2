@@ -1429,24 +1429,41 @@ async function pushToCloud() {
   btn.textContent = '☁ Pushing…';
   btn.disabled = true;
   try {
+    // Strip metaStore down to just the fields we need (drop any raw GC response data)
+    const slimMeta = {};
+    Object.keys(metaStore).forEach(name => {
+      const m = metaStore[name];
+      slimMeta[name] = {
+        chosenTeeKey:   m.chosenTeeKey,
+        detectedTeeKey: m.detectedTeeKey,
+        hcpIndex:       m.hcpIndex,
+        courseHcp:      m.courseHcp,
+      };
+    });
+
     const payload = {
       grossStore,
       netStore,
-      metaStore,
+      metaStore:   slimMeta,
       active,
       roster,
       activeCourse,
-      weekLabel: $('weekLabel').value,
-      roundDate: $('roundDate')?.value,
-      wager:     $('wager').value,
-      pushedAt:  new Date().toISOString(),
+      weekLabel:   $('weekLabel').value,
+      roundDate:   $('roundDate')?.value,
+      wager:       $('wager').value,
+      pushedAt:    new Date().toISOString(),
     };
+
+    const body = JSON.stringify(payload);
+    console.log(`Push payload: ${(body.length/1024).toFixed(1)}KB`);
+
     const res = await fetch('/api/sync', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
+      body,
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
     $('statusArea').innerHTML = `<div class="status s-ok">☁ Scores pushed to cloud — other devices can now tap ⬇ Pull to sync.</div>`;
   } catch(e) {
     $('statusArea').innerHTML = `<div class="status s-err">⛔ Push failed: ${e.message}</div>`;
