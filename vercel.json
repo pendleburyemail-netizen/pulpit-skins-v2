@@ -1,11 +1,8 @@
 {
   "version": 2,
   "functions": {
-    "api/golfcanada.js": {
-      "maxDuration": 30
-    },
-    "api/sync.js": {
-      "maxDuration": 30
-    }
+    "api/golfcanada.js": { "maxDuration": 30 },
+    "api/sync.js":       { "maxDuration": 30 },
+    "api/season.js":     { "maxDuration": 30 }
   }
 }

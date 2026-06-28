@@ -1048,14 +1048,51 @@ function renderPayout() {
 // SEASON DATA — persists week-by-week results
 // Structure: { weeks: [{label, date, wager, players:[{name,paid,skins,won}]}] }
 // ═══════════════════════════════════════════════════════════════════════════
+// Season data — cached locally, master copy in cloud
+let seasonCache = {weeks:[]};
+
 function loadSeason() {
   try {
     const s = localStorage.getItem('skins_season');
-    return s ? JSON.parse(s) : {weeks:[]};
-  } catch(e) { return {weeks:[]}; }
+    if (s) seasonCache = JSON.parse(s);
+  } catch(e) {}
+  return seasonCache;
 }
+
 function saveSeason(season) {
+  seasonCache = season;
   try { localStorage.setItem('skins_season', JSON.stringify(season)); } catch(e) {}
+}
+
+async function pushSeason(season, pin) {
+  const res = await fetch('/api/season', {
+    method:  'POST',
+    headers: {'Content-Type': 'application/json'},
+    body:    JSON.stringify({pin, season}),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  if (json.action === 'CREATED') {
+    alert(`Season bin created!\n\nAdd this Vercel env var then redeploy:\nJSONBIN_SEASON_BIN_ID = ${json.binId}`);
+  }
+  return json;
+}
+
+async function pullSeason() {
+  try {
+    const res = await fetch('/api/season');
+    if (!res.ok) return;
+    const json = await res.json();
+    if (!json.found || !json.data) return;
+    saveSeason(json.data);
+    if (currentTab === 'sandbagger') renderSandbagger();
+  } catch(e) { /* silent */ }
+}
+
+function promptPin(action, onSuccess) {
+  const pin = prompt(`Enter PIN to ${action}:`);
+  if (pin === null) return; // cancelled
+  onSuccess(pin);
 }
 
 function commitWeek() {
@@ -1096,8 +1133,21 @@ function commitWeek() {
   season.weeks.sort((a,b) => (a.date||a.label) < (b.date||b.label) ? -1 : 1);
   saveSeason(season);
 
-  $('statusArea').innerHTML = `<div class="status s-ok">✓ "${weekLbl}" added to Sandbagger Report (${season.weeks.length} week${season.weeks.length>1?'s':''} total).</div>`;
-  if (currentTab === 'sandbagger') renderSandbagger();
+  promptPin('add this week to the season record', async (pin) => {
+    try {
+      $('statusArea').innerHTML = `<div class="status s-load"><div class="spinner"></div>Saving to season record…</div>`;
+      await pushSeason(season, pin);
+      $('statusArea').innerHTML = `<div class="status s-ok">✓ "${weekLbl}" added to Sandbagger Report (${season.weeks.length} week${season.weeks.length>1?'s':''} total).</div>`;
+      if (currentTab === 'sandbagger') renderSandbagger();
+    } catch(e) {
+      if (e.message === 'Invalid PIN') {
+        $('statusArea').innerHTML = `<div class="status s-err">⛔ Incorrect PIN — week saved locally but not pushed to cloud.</div>`;
+      } else {
+        $('statusArea').innerHTML = `<div class="status s-warn">⚠ Week saved locally but cloud push failed: ${e.message}</div>`;
+      }
+      if (currentTab === 'sandbagger') renderSandbagger();
+    }
+  });
 }
 
 function renderSandbagger() {
@@ -1206,9 +1256,24 @@ window.deleteWeek = function(idx) {
   const w = season.weeks[idx];
   if (!w) return;
   if (!confirm(`Remove "${w.label||w.date}" from the season record?`)) return;
-  season.weeks.splice(idx, 1);
-  saveSeason(season);
-  renderSandbagger();
+  promptPin('delete this week', async (pin) => {
+    try {
+      season.weeks.splice(idx, 1);
+      saveSeason(season);
+      await pushSeason(season, pin);
+      renderSandbagger();
+    } catch(e) {
+      if (e.message === 'Invalid PIN') {
+        alert('Incorrect PIN — week not deleted.');
+        // Restore
+        loadSeason();
+      } else {
+        // Deleted locally, warn cloud failed
+        renderSandbagger();
+        alert(`Deleted locally but cloud push failed: ${e.message}`);
+      }
+    }
+  });
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1802,6 +1867,7 @@ function calcAllNet() {
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
 loadAll();
+loadSeason();
 loadCourse();
 $('courseSelect').value = activeCourse;
 active = roster.filter(p => p.gcId || isManual(p)).map(p => p.name);
@@ -1828,7 +1894,10 @@ function applyCloudData(d) {
   renderAll();
 }
 
-// Auto-pull from cloud on open
+// Auto-pull season record from cloud on open
+pullSeason();
+
+// Auto-pull weekly scores from cloud on open
 (async () => {
   try {
     const res  = await fetch('/api/sync');
