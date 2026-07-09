@@ -1912,7 +1912,7 @@ pullSeason();
       applyCloudData(d);
       $('statusArea').innerHTML = `<div class="status s-ok">☁ Loaded from cloud — ${d.weekLabel||d.roundDate||'current week'} (${pushedAt}).</div>`;
     } else {
-      // Local scores exist — prompt only if cloud date differs from local
+      // Local scores exist — only pull if cloud date is different AND newer
       const cloudDate = d.roundDate || '';
       const localDate = $('roundDate')?.value || '';
       if (cloudDate !== localDate) {
@@ -1920,7 +1920,7 @@ pullSeason();
           applyCloudData(d);
         }
       }
-      // Same date — silently up to date, no action needed
+      // Same date — already in sync, no action needed
     }
   } catch(e) { /* silent — don't disrupt app load on network error */ }
 })();
