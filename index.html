@@ -564,6 +564,34 @@ async function fetchOnePlayer(player) {
 // ═══════════════════════════════════════════════════════════════════════════
 // SKINS CALCULATION
 // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// POT CALCULATION — full share (18 holes) or half share (≤9 holes)
+// ═══════════════════════════════════════════════════════════════════════════
+function calcPot(activeNames, wager) {
+  const players = [];
+  let totalPot = 0;
+  let fullCount = 0;
+  let halfCount = 0;
+
+  activeNames.forEach(name => {
+    const p = roster.find(r => r.name === name && (r.gcId || isManual(r)));
+    if (!p) return;
+    const gross      = grossStore[name] || {};
+    const validHoles = Object.values(gross).filter(g => g != null && g !== 0).length;
+    if (validHoles === 0) return; // didn't play at all
+    const half = validHoles <= 9;
+    const paid = half ? wager / 2 : wager;
+    totalPot += paid;
+    if (half) halfCount++; else fullCount++;
+    players.push({...p, paid, half, validHoles});
+  });
+
+  let summary = `${fmt(wager)} × ${fullCount}`;
+  if (halfCount > 0) summary += ` + ${fmt(wager/2)} × ${halfCount} (9-hole)`;
+
+  return {totalPot, players, fullCount, halfCount, summary};
+}
+
 function calcSkins(players) {
   // Relative handicap format: lowest course handicap plays scratch (0),
   // everyone else gets the delta between their CH and the low CH.
@@ -767,19 +795,14 @@ function renderScorecard() {
   const weekLbl = $('weekLabel').value;
   const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
   const totalSkins = holes.filter(h => h.winner).length;
-  const potPlayers = active.filter(n => {
-    const p = roster.find(p => p.name===n&&(p.gcId||isManual(p)));
-    if (!p) return false;
-    const g = grossStore[n] || {};
-    return Object.keys(g).length >= 9;
-  }).length;
-  const totalPot   = potPlayers * wager;
+  const potInfo    = calcPot(active, wager);
+  const totalPot   = potInfo.totalPot;
   const perSkin    = totalSkins > 0 ? totalPot / totalSkins : 0;
 
   // Summary cards
   const summary = `<div class="summary">
     <div class="s-card s-card-wide"><div class="s-lbl">Week</div><div style="font-size:14px;color:var(--text);padding-top:4px">${weekLbl}</div></div>
-    <div class="s-card"><div class="s-lbl">Total Pot</div><div class="s-val">${fmt(totalPot)}</div><div class="s-unit">${fmt(wager)} × ${potPlayers} players</div></div>
+    <div class="s-card"><div class="s-lbl">Total Pot</div><div class="s-val">${fmt(totalPot)}</div><div class="s-unit">${potInfo.summary}</div></div>
     <div class="s-card"><div class="s-lbl">Skins Won</div><div class="s-val">${totalSkins}</div><div class="s-unit">of 18 · ${fmt(perSkin)}/skin</div></div>
   </div>`;
 
@@ -1003,22 +1026,22 @@ function renderPayout() {
   const wager = parseFloat($('wager').value) || 20;
   const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
   const totalSkins = holes.filter(h=>h.winner).length;
-  const potPlayers = active.filter(n => {
-    const p = roster.find(p => p.name===n&&(p.gcId||isManual(p)));
-    if (!p) return false;
-    const g = grossStore[n] || {};
-    return Object.keys(g).length >= 9;
-  }).length;
-  const totalPot   = potPlayers * wager;
+  const potInfo    = calcPot(active, wager);
+  const totalPot   = potInfo.totalPot;
   const perSkin    = totalSkins>0 ? totalPot/totalSkins : 0;
 
   const rows = [...players].sort((a,b)=>(skinCount[b.name]||0)-(skinCount[a.name]||0)).map(p => {
-    const skins  = skinCount[p.name] || 0;
-    const meta   = metaStore[p.name] || {};
-    const hcpStr = p.hcpIndex       != null ? p.hcpIndex.toFixed(1)   : '–';
-    const chStr  = meta.courseHcp   != null ? String(meta.courseHcp - (minCH||0)) : '–';
+    const skins    = skinCount[p.name] || 0;
+    const meta     = metaStore[p.name] || {};
+    const potP     = potInfo.players.find(x => x.name === p.name);
+    const paid     = potP ? potP.paid : wager;
+    const isHalf   = potP ? potP.half : false;
+    const hcpStr   = p.hcpIndex       != null ? p.hcpIndex.toFixed(1)   : '–';
+    const chStr    = meta.courseHcp   != null ? String(meta.courseHcp - (minCH||0)) : '–';
+    const nameTag  = isManual(p) ? '<br/><span style="font-size:9px;color:var(--muted)">✎ manual</span>' : '';
+    const halfTag  = isHalf ? ' <span style="font-size:9px;color:var(--gold);font-weight:600">½</span>' : '';
     return `<tr>
-      <td class="pay-name">${p.name}${isManual(p)?'<br/><span style="font-size:9px;color:var(--muted)">✎ manual</span>':''}</td>
+      <td class="pay-name">${p.name}${nameTag}${halfTag}</td>
       <td style="color:var(--text);font-family:var(--mono);font-size:11px">${hcpStr}</td>
       <td style="color:var(--gold-lit);font-family:var(--mono);font-size:11px;font-weight:500">${chStr}</td>
       <td>${badge(skins)}</td>
@@ -1105,8 +1128,8 @@ function commitWeek() {
   const roundDate  = $('roundDate')?.value || '';
   const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
   const totalSkins = holes.filter(h => h.winner).length;
-  const potPlayers = players; // already filtered to those with >= 9 holes
-  const totalPot   = potPlayers.length * wager;
+  const potInfo2   = calcPot(active, wager);
+  const totalPot   = potInfo2.totalPot;
   const perSkin    = totalSkins > 0 ? totalPot / totalSkins : 0;
 
   const season = loadSeason();
@@ -1122,9 +1145,9 @@ function commitWeek() {
     label:   weekLbl,
     date:    roundDate,
     wager,
-    players: potPlayers.map(p => {
+    players: potInfo2.players.map(p => {
       const skins = skinCount[p.name] || 0;
-      return { name:p.name, paid:wager, skins, won: Math.round(skins * perSkin * 100)/100 };
+      return { name:p.name, paid:p.paid, skins, won: Math.round(skins * perSkin * 100)/100 };
     }),
   };
 
@@ -1482,6 +1505,9 @@ function clearAllScores() {
   localStorage.removeItem('skins_grossStore');
   localStorage.removeItem('skins_netStore');
   localStorage.removeItem('skins_metaStore');
+  // Clear week label and date so they don't carry over
+  $('weekLabel').value = '';
+  $('roundDate').value = '';
   saveAll();
   renderChips(); renderAll();
 }
@@ -1581,12 +1607,8 @@ function generateResults() {
   const roundDate  = $('roundDate')?.value || '';
   const {holes, skinCount, minCH, relativeNet} = calcSkins(players);
   const totalSkins = holes.filter(h => h.winner).length;
-  const potPlayers = active.filter(n => {
-    const p = roster.find(p => p.name===n&&(p.gcId||isManual(p)));
-    if (!p) return false;
-    return Object.keys(grossStore[n]||{}).length >= 9;
-  }).length;
-  const totalPot = potPlayers * wager;
+  const potInfo3 = calcPot(active, wager);
+  const totalPot = potInfo3.totalPot;
   const perSkin  = totalSkins > 0 ? totalPot / totalSkins : 0;
   const H = Array.from({length:18},(_,i)=>i+1);
 
@@ -1763,7 +1785,7 @@ function generateResults() {
 <div class="meta">${weekLbl}${roundDate?' · '+roundDate:''} · ${potPlayers} players · ${fmtC(wager)} wager</div>
 
 <div class="summary">
-  <div class="s-card"><div class="s-lbl">Total Pot</div><div class="s-val">${fmtC(totalPot)}</div><div class="s-unit">${fmtC(wager)} × ${potPlayers} players</div></div>
+  <div class="s-card"><div class="s-lbl">Total Pot</div><div class="s-val">${fmtC(totalPot)}</div><div class="s-unit">${potInfo3.summary}</div></div>
   <div class="s-card"><div class="s-lbl">Skins Won</div><div class="s-val">${totalSkins}</div><div class="s-unit">of 18 holes</div></div>
   <div class="s-card"><div class="s-lbl">Per Skin</div><div class="s-val">${fmtC(perSkin)}</div><div class="s-unit">${totalSkins} skins</div></div>
 </div>
