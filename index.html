@@ -216,8 +216,8 @@ body{display:flex;flex-direction:column;min-height:100vh;padding-bottom:env(safe
 </div>
 
 <div class="ctrl-bar">
-  <input class="week-input" id="weekLabel" value="Week 2 – May 27, 2026" placeholder="Week label"/>
-  <input class="week-input" id="roundDate" type="date" value="2026-05-27" style="max-width:150px" title="Round date — used to find correct week's scores"/>
+  <input class="week-input" id="weekLabel" value="" placeholder="Week label"/>
+  <input class="week-input" id="roundDate" type="date" value="" style="max-width:150px" title="Round date — used to find correct week's scores"/>
   <select id="courseSelect" style="background:var(--card);border:1px solid var(--border);color:var(--text);font-size:13px;padding:7px 8px;border-radius:var(--radius);outline:none">
     <option value="paintbrush">🖌 Paintbrush</option>
     <option value="pulpit">⛪ Pulpit</option>
@@ -564,8 +564,26 @@ async function fetchOnePlayer(player) {
 // ═══════════════════════════════════════════════════════════════════════════
 // SKINS CALCULATION
 // ═══════════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════════
-// POT CALCULATION — full share (18 holes) or half share (≤9 holes)
+function getMostRecentWednesday() {
+  const today = new Date();
+  const day   = today.getDay(); // 0=Sun, 3=Wed
+  const diff  = (day >= 3) ? day - 3 : day + 4; // days since last Wednesday
+  const wed   = new Date(today);
+  wed.setDate(today.getDate() - diff);
+  return wed.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function setDefaultDate() {
+  const wed = getMostRecentWednesday();
+  // Only set if no date already loaded from localStorage/cloud
+  if (!$('roundDate').value) {
+    $('roundDate').value = wed;
+    const d = new Date(wed + 'T12:00:00');
+    $('weekLabel').value = d.toLocaleString('en-CA', {month:'long', day:'numeric', year:'numeric'});
+  }
+}
+
+// - full share (18 holes) or half share (<=9 holes)
 // ═══════════════════════════════════════════════════════════════════════════
 function calcPot(activeNames, wager) {
   const players = [];
@@ -1894,6 +1912,7 @@ loadCourse();
 $('courseSelect').value = activeCourse;
 active = roster.filter(p => p.gcId || isManual(p)).map(p => p.name);
 recalcAllNet();
+setDefaultDate();  // set most recent Wednesday if no date in localStorage
 renderChips();
 renderAll();
 
@@ -1911,6 +1930,7 @@ function applyCloudData(d) {
   if (d.weekLabel) $('weekLabel').value = d.weekLabel;
   if (d.roundDate) $('roundDate').value = d.roundDate;
   if (d.wager)     $('wager').value     = d.wager;
+  setDefaultDate(); // fill in Wednesday if cloud had no date
   saveAll();
   renderChips();
   renderAll();
