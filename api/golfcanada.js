@@ -204,12 +204,21 @@ export default async function handler(req, res) {
           const holeData = await gcGet(token,
             `/api/scores/getScoreData?individualId=${result.individualId}&scoreId=${result.round.id}`
           );
-          // Extract only holeScores — the response also contains full facility/tee data we don't need
-          grossScores = extractGrossScores(
-            holeData?.score?.holeScores,
-            holeData?.score?.date,   // actual date of the score record
-            target                   // date we requested
-          );
+
+          // Cross-validate: the score record date must match BOTH the history round date AND target
+          const scoreRecordDate = holeData?.score?.date?.slice(0,10);
+          const historyRoundDate = result.round.date?.slice(0,10);
+
+          if (scoreRecordDate && historyRoundDate && scoreRecordDate !== historyRoundDate) {
+            console.warn(`${result.name}: score record date ${scoreRecordDate} != history date ${historyRoundDate} — rejecting`);
+            holeDataError = `Date cross-validation failed: history=${historyRoundDate}, record=${scoreRecordDate}`;
+          } else {
+            grossScores = extractGrossScores(
+              holeData?.score?.holeScores,
+              scoreRecordDate,
+              target
+            );
+          }
         } catch(e) {
           holeDataError = e.message;
         }
@@ -229,7 +238,7 @@ export default async function handler(req, res) {
         };
       }
 
-      return res.status(200).json({ targetDate:target, memberCount:allPlayers.length, results });
+      return res.status(200).json({ targetDate:target, memberCount:allPlayers.length, results, debug: results.map(r => ({name:r.name, found:r.found, historyDate:r.round?.date||null, recentDates:r.recentDates})) });
     }
 
     return res.status(400).json({ error: `Unknown action: ${action}` });
