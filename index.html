@@ -575,12 +575,10 @@ function getMostRecentWednesday() {
 
 function setDefaultDate() {
   const wed = getMostRecentWednesday();
-  // Only set if no date already loaded from localStorage/cloud
-  if (!$('roundDate').value) {
-    $('roundDate').value = wed;
-    const d = new Date(wed + 'T12:00:00');
-    $('weekLabel').value = d.toLocaleString('en-CA', {month:'long', day:'numeric', year:'numeric'});
-  }
+  // Always set to current Wednesday — never carry forward an old date
+  $('roundDate').value = wed;
+  const d = new Date(wed + 'T12:00:00');
+  $('weekLabel').value = d.toLocaleString('en-CA', {month:'long', day:'numeric', year:'numeric'});
 }
 
 // - full share (18 holes) or half share (<=9 holes)
@@ -1933,10 +1931,19 @@ function applyCloudData(d) {
     saveCourse();
     $('courseSelect').value = activeCourse;
   }
-  if (d.weekLabel) $('weekLabel').value = d.weekLabel;
-  if (d.roundDate) $('roundDate').value = d.roundDate;
-  if (d.wager)     $('wager').value     = d.wager;
-  setDefaultDate(); // fill in Wednesday if cloud had no date
+  // Only apply cloud date if it's the current Wednesday or later
+  // Never let cloud pull set the date backwards to an older week
+  const currentWed = getMostRecentWednesday();
+  if (d.roundDate && d.roundDate >= currentWed) {
+    if (d.weekLabel) $('weekLabel').value = d.weekLabel;
+    if (d.roundDate) $('roundDate').value = d.roundDate;
+  } else {
+    // Cloud has older data — keep scores for reference but reset date to today's Wednesday
+    $('roundDate').value = currentWed;
+    const dt = new Date(currentWed + 'T12:00:00');
+    $('weekLabel').value = dt.toLocaleString('en-CA', {month:'long', day:'numeric', year:'numeric'});
+  }
+  if (d.wager) $('wager').value = d.wager;
   saveAll();
   renderChips();
   renderAll();
