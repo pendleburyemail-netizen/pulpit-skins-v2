@@ -141,7 +141,16 @@ export default async function handler(req, res) {
           const history = await gcGet(token,
             `/api/scores/getHistory?$skip=0&$top=20&individualId=${friend.individualId}`
           );
-          const round = history.data?.find(r => r.date?.slice(0,10) === target);
+
+          // Log what dates GC returned for this player
+          const returnedDates = history.data?.slice(0,5).map(r => r.date?.slice(0,10)) || [];
+          console.log(`${friend.name} history dates: ${returnedDates.join(', ')}, looking for: ${target}`);
+
+          // Strict date match only — r.date must start with target date
+          const round = history.data?.find(r => {
+            const roundDate = r.date?.slice(0,10);
+            return roundDate === target;
+          });
 
           if (!round) {
             return {
