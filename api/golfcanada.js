@@ -44,15 +44,37 @@ async function gcGet(token, path) {
 
 // Extract 18 gross scores from Golf Canada holeScores array
 // Filters out summary rows (9.1=front total, 18.1=back total, 18.2=grand total)
-function extractGrossScores(holeScores) {
+function extractGrossScores(holeScores, expectedDate, targetDate) {
   const gross = {};
   if (!Array.isArray(holeScores)) return gross;
+
+  // Strict date validation — reject if score date doesn't match target date
+  if (expectedDate && targetDate) {
+    const ed = expectedDate.slice(0, 10);
+    const td = targetDate.slice(0, 10);
+    if (ed !== td) {
+      console.warn(`Date mismatch: expected ${td}, got ${ed} — rejecting scores`);
+      return gross;
+    }
+  }
+
   holeScores.forEach(h => {
     const num = h.number;
+    // Accept integer holes 1-18 including zeros (zeros = GC unplayed substitution,
+    // handled downstream — they display but don't qualify for skins)
     if (Number.isInteger(num) && num >= 1 && num <= 18 && h.gross != null) {
       gross[num] = h.gross;
     }
   });
+
+  // QC: must have at least 9 holes with a NON-ZERO score to be a real round
+  // (a player missing a few holes is fine; all zeros is not a real round)
+  const nonZeroCount = Object.values(gross).filter(g => g > 0).length;
+  if (nonZeroCount < 9) {
+    console.warn(`QC fail: only ${nonZeroCount} non-zero holes — rejecting as not a real round`);
+    return {};
+  }
+
   return gross;
 }
 
@@ -174,7 +196,11 @@ export default async function handler(req, res) {
             `/api/scores/getScoreData?individualId=${result.individualId}&scoreId=${result.round.id}`
           );
           // Extract only holeScores — the response also contains full facility/tee data we don't need
-          grossScores = extractGrossScores(holeData?.score?.holeScores);
+          grossScores = extractGrossScores(
+            holeData?.score?.holeScores,
+            holeData?.score?.date,   // actual date of the score record
+            target                   // date we requested
+          );
         } catch(e) {
           holeDataError = e.message;
         }
@@ -182,6 +208,7 @@ export default async function handler(req, res) {
         result.grossScores  = grossScores;
         result.holesFound   = Object.keys(grossScores).length;
         result.holeDataError = holeDataError;
+        result.qcRejected   = Object.keys(grossScores).length === 0 && !holeDataError;
         result.round = {
           id:     result.round.id,
           date:   result.round.date,
