@@ -1412,6 +1412,12 @@ async function fetchAll() {
     const gross      = gc.grossScores || {};
     const holesFound = Object.keys(gross).length;
 
+    // QC rejection — API returned a round but scores failed validation (date mismatch or <9 valid holes)
+    if (gc.qcRejected) {
+      errors.push({name: p.name, msg: `⚠ Scores failed quality check — date mismatch or insufficient valid holes. Not loaded.`});
+      return;
+    }
+
     if (holesFound < 9) {
       errors.push({name: p.name, msg: `Only ${holesFound} holes found from Golf Canada`});
       grossStore[p.name] = gross;
